@@ -1,0 +1,22 @@
+env.json
+
+janus core/*
+praetorcast-core/*
+node_modules/*
+
+# Musique et sons
+public/music/*
+!/public/music/example/song.txt
+
+public/soundboard/*
+!public/soundboard/song.txt
+
+
+public/banner/*
+!public/banner/example/banner.txt
+
+public/scheduler/*
+!public/scheduler/example/scheduler.txt
+
+public/font/*
+!public/font/font.txt

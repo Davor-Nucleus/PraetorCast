@@ -1,0 +1,23 @@
+@echo off
+cd ..
+
+@REM echo Démarrage de PraetorCast...
+@REM start cmd /k "python start/start.py"
+
+@REM @echo Démarrage du serveur web...
+@REM @start cmd /k "node ./start/script-manager.js"
+
+@echo Démarrage de l'application...
+@start cmd /k "praetorcast.exe"
+
+@echo Démarrage de serveur de musique...
+@start cmd /k "JanusCore.exe"
+
+@echo Démarrage de serveur de soundboard...
+@start cmd /k "PhonosCore.exe"
+
+@echo Démarrage brigde...
+@start cmd /k "python ./sound-bridge.py"
+
+@echo Démarrage du serveur de chat youtube...
+@start cmd /k "node ./ws_chat_youtube.cjs"
