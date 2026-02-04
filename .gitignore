@@ -6,17 +6,20 @@ node_modules/*
 
 # Musique et sons
 public/music/*
-!/public/music/example/song.txt
+!public/music/example/
+!public/music/example/**
 
 public/soundboard/*
 !public/soundboard/song.txt
 
 
 public/banner/*
-!public/banner/example/banner.txt
+!public/banner/example/
+!public/banner/example/**
 
 public/scheduler/*
-!public/scheduler/example/scheduler.txt
+!public/scheduler/scheduler.txt
+
 
 public/font/*
 !public/font/font.txt
