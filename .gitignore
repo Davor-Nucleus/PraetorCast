@@ -14,8 +14,7 @@ public/soundboard/*
 
 
 public/banner/*
-!public/banner/example/
-!public/banner/example/**
+!public/banner/banner.txt
 
 public/scheduler/*
 !public/scheduler/scheduler.txt
