@@ -8,7 +8,7 @@ cd ..
 @REM @start cmd /k "node ./start/script-manager.js"
 
 @echo Démarrage de l'application...
-@start cmd /k "praetorcast.exe"
+@start cmd /k "praetorcast_core.exe"
 
 @echo Démarrage de serveur de musique...
 @start cmd /k "JanusCore.exe"
