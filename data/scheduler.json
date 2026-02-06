@@ -5,49 +5,56 @@
       "day": "MON",
       "date": "02/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     },
     {
       "dayIndex": 1,
       "day": "TUE",
       "date": "03/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     },
     {
       "dayIndex": 2,
       "day": "WED",
       "date": "04/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     },
     {
       "dayIndex": 3,
       "day": "THU",
       "date": "05/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     },
     {
       "dayIndex": 4,
       "day": "FRI",
       "date": "06/02",
       "title": "Space marine II",
-      "coverPath": "/public/scheduler/412bd08c-ace8-4fa5-88d3-6de6c1802b51.jpg"
+      "coverPath": "/public/scheduler/412bd08c-ace8-4fa5-88d3-6de6c1802b51.jpg",
+      "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
       "date": "07/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     },
     {
       "dayIndex": 6,
       "day": "SUN",
       "date": "08/02",
       "title": "",
-      "coverPath": ""
+      "coverPath": "",
+      "time": ""
     }
   ],
   "backgroundImage": "/public/scheduler/8cd9c853-edf3-4966-9b92-730654b4a14e.png"
