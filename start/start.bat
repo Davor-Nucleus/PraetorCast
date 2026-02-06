@@ -17,7 +17,7 @@ cd ..
 @start cmd /k "PhonosCore.exe"
 
 @echo Démarrage brigde...
-@start cmd /k "python ./sound-bridge.py"
+@start cmd /k "line.exe"
 
 @echo Démarrage du serveur de chat youtube...
 @start cmd /k "node ./ws_chat_youtube.cjs"
