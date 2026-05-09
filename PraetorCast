@@ -1,0 +1,508 @@
+# PraetorCast
+
+PraetorCast est un outil complet pour les streamers, permettant de faciliter la gestion du stream avec une intégration dans OBS grâce aux sources "navigateur web". Le système est entièrement développé en Rust pour des performances optimales.
+
+## Vue d'ensemble
+
+PraetorCast est composé de trois applications principales qui fonctionnent ensemble :
+
+1. **praetorcast-core** : Serveur web principal (Rust/Actix-web) - Interface web et gestion des overlays
+2. **JanusCore** : Serveur de musique (Rust/Warp) - Lecture de musique avec support multi-format
+3. **PhonosCore** : Serveur de soundboard (Rust/Warp) - Gestion des effets sonores avec normalisation EBU R128
+
+## Architecture
+
+```
+PraetorCast/
+├── praetorcast-core/          # Serveur web principal (Rust)
+│   ├── src/                    # Code source Rust
+│   │   ├── main.rs            # Point d'entrée principal
+│   │   ├── clock.rs           # Module horloge
+│   │   ├── music_config.rs    # Configuration musique
+│   │   ├── music_current.rs   # Affichage musique actuelle
+│   │   ├── banner_config.rs   # Configuration bannières
+│   │   ├── banner.rs          # Affichage bannières
+│   │   ├── scheduler.rs       # Planning hebdomadaire
+│   │   ├── followers_info.rs  # Informations followers
+│   │   ├── chat_horizontal.rs # Chat horizontal
+│   │   ├── chat_vertical.rs   # Chat vertical
+│   │   └── chat_youtube.rs    # Chat YouTube
+│   ├── templates/             # Templates Askama (HTML)
+│   ├── public/                # Fichiers statiques
+│   │   ├── music/            # Dossiers de musique
+│   │   ├── soundboard/       # Sons de la soundboard
+│   │   ├── banner/           # Images de bannières
+│   │   ├── scheduler/        # Images du planning
+│   │   └── font/             # Polices personnalisées
+│   ├── data/                  # Données de configuration
+│   │   ├── banner.json       # Configuration bannières
+│   │   └── scheduler.json    # Configuration planning
+│   ├── env.json              # Configuration principale
+│   ├── Cargo.toml            # Dépendances Rust
+│   └── praetorcast_core.exe  # Exécutable compilé
+│
+├── janus core/                # Workspace Rust pour l'audio
+│   ├── JanusCore/            # Serveur de musique
+│   │   ├── src/              # Code source
+│   │   │   ├── main.rs       # Point d'entrée
+│   │   │   ├── controller.rs # Contrôleur API
+│   │   │   ├── model.rs      # Modèles de données
+│   │   │   ├── routes.rs     # Routes API
+│   │   │   └── service.rs    # Service de lecture
+│   │   ├── public/music/     # Dossiers de musique
+│   │   ├── env.json          # Configuration JanusCore
+│   │   └── JanusCore.exe     # Exécutable compilé
+│   │
+│   ├── PhonosCore/           # Serveur de soundboard
+│   │   ├── src/              # Code source
+│   │   │   ├── main.rs       # Point d'entrée
+│   │   │   ├── controller.rs # Contrôleur API
+│   │   │   ├── model.rs      # Modèles de données
+│   │   │   ├── routes.rs     # Routes API
+│   │   │   └── service.rs    # Service de lecture
+│   │   ├── public/soundboard/ # Fichiers audio
+│   │   ├── env.json          # Configuration PhonosCore
+│   │   └── PhonosCore.exe    # Exécutable compilé
+│   │
+│   └── janus_common/          # Bibliothèque partagée
+│       ├── src/              # Code commun
+│       │   ├── config.rs     # Configuration
+│       │   ├── logger.rs     # Système de logs
+│       │   ├── gui.rs        # Interface graphique Windows
+│       │   └── audio.rs      # Utilitaires audio
+│       └── Cargo.toml
+│
+├── start/                     # Scripts de démarrage
+│   └── start.bat             # Script batch pour démarrer tous les services
+├── sound-bridge.py            # Pont audio Python (optionnel)
+├── ws_chat_youtube.cjs        # WebSocket pour le chat YouTube (Node.js)
+├── env.json                   # Configuration globale (racine)
+└── env-model.json            # Modèle de configuration
+```
+
+## Prérequis
+
+### Rust
+Installez Rust via [rustup.rs](https://rustup.rs/)
+
+```bash
+# Vérifier l'installation
+rustc --version
+cargo --version
+```
+
+### Python (optionnel - pour sound-bridge)
+```bash
+pip install pygame sounddevice flask flask-cors pydub numpy
+```
+
+### Node.js (pour le chat YouTube)
+```bash
+npm install
+```
+
+### FFMPEG (optionnel)
+Pour le traitement audio avancé : https://ffmpeg.org/
+
+## Configuration
+
+### Fichier env.json
+
+Créez le fichier `env.json` à partir de `env-model.json` dans chaque dossier :
+
+1. **praetorcast-core/env.json** : Configuration du serveur web principal
+2. **janus core/JanusCore/env.json** : Configuration du serveur de musique
+3. **janus core/PhonosCore/env.json** : Configuration du serveur de soundboard
+
+#### Variables principales (praetorcast-core/env.json)
+
+```json
+{
+  "PORT": 3000,                    // Port du serveur web principal
+  "PORT_MUSIC": 3001,              // Port de JanusCore
+  "PORT_SOUNDBOARD": 3002,         // Port de PhonosCore
+  "PORT_WS_YOUTUBE_CHAT": 3003,    // Port WebSocket chat YouTube
+  "TWITCH_CHANNEL_NAME": "VotreChannel",
+  "TWITCH_CLIENT_ID": "votre_client_id",
+  "TWITCH_OAUTH_TOKEN": "votre_token_oauth",
+  "FRONT_FONT_TITLE": "font/CinzelDecorative-Regular.ttf",
+  "FRONT_FONT_BODY": "font/Lato-Regular.ttf",
+  "SOUNDBOARD_SHORTCUTS": {
+    "1": "alt+1",
+    "2": "alt+2"
+  }
+}
+```
+
+#### Configuration JanusCore (janus core/JanusCore/env.json)
+
+```json
+{
+  "PORT_MUSIC": 3001,
+  "VOLUME": 1.0,
+  "LIMITER_DB": 0.0,
+  "janusCoreGui": true
+}
+```
+
+#### Configuration PhonosCore (janus core/PhonosCore/env.json)
+
+```json
+{
+  "PORT_SOUNDBOARD": 3002,
+  "VOLUME": 1.0,
+  "phonosCoreGui": true
+}
+```
+
+### Configuration Twitch
+
+#### 1. Obtenir le Client ID
+
+1. Allez sur https://dev.twitch.tv/console/apps
+2. Connectez-vous avec votre compte Twitch
+3. Créez une application
+4. Récupérez le Client ID
+
+#### 2. Obtenir le Token OAuth
+
+Remplacez `TON_CLIENT_ID` dans cette URL :
+```
+https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread
+```
+
+Après autorisation, récupérez le `access_token` dans l'URL.
+
+#### 3. Tester la configuration
+
+```bash
+curl -H "Client-ID: TON_CLIENT_ID" -H "Authorization: Bearer TON_OAUTH_TOKEN" https://api.twitch.tv/helix/users
+```
+
+### Configuration YouTube
+
+Pour récupérer l'ID de la chaîne YouTube :
+1. Allez dans l'onglet "À propos" de votre chaîne
+2. Cliquez sur "Partager la chaîne"
+3. Sélectionnez "Copier l'ID de la chaîne"
+4. Ajoutez `YOUTUBE_CHANNEL_ID` dans `env.json`
+
+## Compilation
+
+### Compiler praetorcast-core
+
+```bash
+cd praetorcast-core
+cargo build --release
+```
+
+L'exécutable sera dans `praetorcast-core/target/release/praetorcast_core.exe`
+
+### Compiler JanusCore et PhonosCore
+
+```bash
+cd "janus core"
+cargo build --workspace --release
+```
+
+Les exécutables seront dans :
+- `janus core/target/release/JanusCore.exe`
+- `janus core/target/release/PhonosCore.exe`
+
+## Démarrage
+
+### Démarrage automatique (recommandé)
+
+Utilisez le script batch pour démarrer tous les services :
+
+```bash
+start/start.bat
+```
+
+Ce script démarre :
+1. `praetorcast_core.exe` (serveur web principal)
+2. `JanusCore.exe` (serveur de musique)
+3. `PhonosCore.exe` (serveur de soundboard)
+4. `sound-bridge.py` (pont audio, optionnel)
+5. `ws_chat_youtube.cjs` (WebSocket chat YouTube)
+
+### Démarrage manuel
+
+#### 1. Démarrer praetorcast-core
+
+```bash
+cd praetorcast-core
+cargo run
+# ou directement
+praetorcast_core.exe
+```
+
+Le serveur sera accessible sur `http://127.0.0.1:3000` (ou le port configuré)
+
+#### 2. Démarrer JanusCore (Musique)
+
+```bash
+cd "janus core/JanusCore"
+cargo run
+# ou directement
+JanusCore.exe
+```
+
+API disponible sur `http://127.0.0.1:3001`
+
+#### 3. Démarrer PhonosCore (Soundboard)
+
+```bash
+cd "janus core/PhonosCore"
+cargo run
+# ou directement
+PhonosCore.exe
+```
+
+API disponible sur `http://127.0.0.1:3002`
+
+#### 4. Démarrer le chat YouTube (optionnel)
+
+```bash
+node ws_chat_youtube.cjs
+```
+
+## Fonctionnalités
+
+### praetorcast-core - Serveur Web Principal
+
+#### Pages d'affichage (pour OBS)
+
+- **`GET /`** : Page d'accueil avec vue d'ensemble
+- **`GET /clock`** : Horloge en temps réel
+- **`GET /music-current`** : Affichage de la musique en cours
+- **`GET /banner`** : Bannières rotatives pour réseaux sociaux
+- **`GET /scheduler`** : Planning hebdomadaire des streams
+- **`GET /chat-horizontal`** : Chat Twitch/YouTube horizontal
+- **`GET /chat-vertical`** : Chat Twitch/YouTube vertical
+- **`GET /chat-youtube`** : Chat YouTube intégré
+- **`GET /followers-info`** : Informations sur les followers Twitch
+
+#### Pages de configuration
+
+- **`GET /music-config`** : Interface de configuration de la musique
+- **`GET /banner-config`** : Interface de configuration des bannières
+- **`GET /scheduler`** : Éditeur de planning
+
+#### API REST
+
+- **`GET /api/banner-config`** : Récupère la configuration des bannières
+- **`POST /api/banner-config`** : Sauvegarde la configuration des bannières
+- **`POST /api/banner-upload`** : Upload d'image de bannière
+- **`GET /api/scheduler-config`** : Récupère la configuration du planning
+- **`POST /api/scheduler-config`** : Sauvegarde la configuration du planning
+- **`POST /api/scheduler-upload`** : Upload d'image pour le planning
+- **`POST /api/scheduler-background-upload`** : Upload d'image de fond
+
+### JanusCore - Serveur de Musique
+
+#### Gestion des dossiers
+
+- **`GET /api/folderlist`** : Liste tous les dossiers de musique disponibles
+- **`GET /api/folder?folder=NomDossier`** : Lance la lecture d'un dossier
+
+#### Contrôle de lecture
+
+- **`GET /api/pause`** : Met en pause
+- **`GET /api/resume`** : Reprend la lecture
+- **`GET /api/stop`** : Arrête la lecture
+- **`GET /api/next`** : Piste suivante
+- **`GET /api/previous`** : Piste précédente
+- **`GET /api/has_next`** : Vérifie s'il y a une piste suivante
+- **`GET /api/has_previous`** : Vérifie s'il y a une piste précédente
+
+#### Volume
+
+- **`GET /api/volume`** : Récupère le volume actuel (0.0 à 1.0)
+- **`POST /api/volume`** : Définit le volume (corps: `{"volume": 0.5}`)
+- **`GET /api/volume/add`** : Augmente le volume
+- **`GET /api/volume/subtract`** : Diminue le volume
+
+#### Limiteur
+
+- **`GET /api/limiter`** : Récupère la valeur du limiteur en dB
+- **`POST /api/limiter`** : Définit le limiteur (corps: `{"limiter_db": -3.0}`)
+- **`GET /api/limiter/add`** : Augmente le limiteur
+- **`GET /api/limiter/subtract`** : Diminue le limiteur
+
+#### État et informations
+
+- **`GET /api/status`** : État complet (pause, volume, titre, etc.)
+- **`GET /api/current_music`** : Informations sur la piste en cours
+- **`WS /api/current_music_ws`** : WebSocket pour les mises à jour en temps réel
+
+#### Formats audio supportés
+
+- MP3
+- FLAC
+- WAV
+- AAC
+- MP4 (ISOM4)
+
+### PhonosCore - Serveur de Soundboard
+
+#### Gestion des sons
+
+- **`GET /api/soundboard/sounds`** : Liste tous les sons disponibles
+- **`GET /api/soundboard/play?sound=nom_fichier`** : Joue un son
+  - Met automatiquement la musique en pause
+  - Reprend la musique à la fin du son
+- **`GET /api/soundboard/stop`** : Arrête le son en cours et reprend la musique
+
+#### Normalisation EBU R128
+
+PhonosCore utilise la normalisation **EBU R128** (norme utilisée par Spotify, YouTube, TV) :
+- Analyse automatique du niveau sonore (Loudness)
+- Calcul du gain nécessaire pour uniformiser le volume
+- Application automatique à la volée
+- Résultat : tous les sons ont le même volume sans intervention manuelle
+
+## Intégration OBS
+
+Pour intégrer les différentes fonctionnalités dans OBS Studio :
+
+1. Ajoutez une source "Navigateur web" dans OBS
+2. Entrez l'URL correspondante à la fonctionnalité souhaitée
+3. Ajustez la taille et la position selon vos besoins
+
+### URLs recommandées pour OBS
+
+- **Page d'accueil** : `http://127.0.0.1:3000/`
+- **Horloge** : `http://127.0.0.1:3000/clock`
+- **Musique en cours** : `http://127.0.0.1:3000/music-current`
+- **Chat horizontal** : `http://127.0.0.1:3000/chat-horizontal`
+- **Chat vertical** : `http://127.0.0.1:3000/chat-vertical`
+- **Chat YouTube** : `http://127.0.0.1:3000/chat-youtube`
+- **Bannières** : `http://127.0.0.1:3000/banner`
+- **Planning** : `http://127.0.0.1:3000/scheduler`
+- **Informations followers** : `http://127.0.0.1:3000/followers-info`
+
+### Paramètres recommandés pour OBS
+
+- **Largeur** : 1920px (ou selon vos besoins)
+- **Hauteur** : 1080px (ou selon vos besoins)
+- **Actualiser le navigateur quand la scène devient active** : Activé
+- **Contrôles** : Désactivé (pour éviter les interactions)
+
+## Technologies utilisées
+
+### praetorcast-core
+
+- **Actix-web** : Framework web asynchrone haute performance
+- **Askama** : Moteur de templates type-safe
+- **Tokio** : Runtime asynchrone
+- **Serde/Serde JSON** : Sérialisation/désérialisation
+- **UUID** : Génération d'identifiants uniques
+
+### JanusCore & PhonosCore
+
+- **Warp** : Framework HTTP asynchrone
+- **Rodio** : Bibliothèque audio pour la lecture
+- **Symphonia** : Décodage audio multi-format
+- **EBUR128** : Normalisation audio EBU R128 (PhonosCore uniquement)
+- **Tokio** : Runtime asynchrone
+- **Serde/Serde JSON** : Sérialisation/désérialisation
+
+### janus_common
+
+- **winapi** : Interface Windows native pour la GUI
+- **Serde** : Configuration JSON
+
+## Structure des données
+
+### banner.json
+
+```json
+{
+  "cards": [
+    {
+      "id": "uuid",
+      "title": "Titre",
+      "subtitle": "Sous-titre",
+      "imagePath": "/public/banner/image.png",
+      "link": "https://..."
+    }
+  ],
+  "rotationInterval": 5000,
+  "transitionDuration": 1000
+}
+```
+
+### scheduler.json
+
+```json
+{
+  "schedule": [
+    {
+      "dayIndex": 0,
+      "day": "Lundi",
+      "date": "2024-01-01",
+      "title": "Titre du stream",
+      "coverPath": "/public/scheduler/image.png"
+    }
+  ],
+  "backgroundImage": "/public/scheduler/bg.png"
+}
+```
+
+## Fonctionnalités avancées
+
+### WebSocket en temps réel
+
+- **Musique actuelle** : Mise à jour automatique via WebSocket (`/api/current_music_ws`)
+- **Chat** : Synchronisation en temps réel via WebSocket
+
+### Gestion des polices personnalisées
+
+- Support des polices TTF/OTF
+- Configuration via `env.json`
+- Polices par défaut : Cinzel Decorative (titres), Lato (corps)
+
+### Système de fichiers
+
+- Upload automatique d'images avec UUID
+- Organisation automatique des dossiers
+- Sauvegarde automatique des configurations JSON
+
+### Interface graphique Windows
+
+JanusCore et PhonosCore peuvent afficher une fenêtre de logs native Windows (configurable via `env.json`)
+
+## Dépannage
+
+### Le serveur ne démarre pas
+
+1. Vérifiez que les ports ne sont pas déjà utilisés
+2. Vérifiez que `env.json` existe et est valide
+3. Vérifiez les logs dans la console ou la fenêtre GUI
+
+### La musique ne joue pas
+
+1. Vérifiez que JanusCore est démarré
+2. Vérifiez que les fichiers audio sont dans `public/music/`
+3. Vérifiez les permissions de lecture des fichiers
+
+### Le chat ne s'affiche pas
+
+1. Vérifiez les credentials Twitch dans `env.json`
+2. Vérifiez que le token OAuth est valide
+3. Vérifiez que `ws_chat_youtube.cjs` est démarré pour YouTube
+
+### Les sons de la soundboard ne jouent pas
+
+1. Vérifiez que PhonosCore est démarré
+2. Vérifiez que JanusCore est démarré (pour la pause automatique)
+3. Vérifiez que les fichiers audio sont dans `public/soundboard/`
+
+## Support
+
+Pour toute question ou problème :
+- Consultez les logs dans les fenêtres GUI ou la console
+- Vérifiez la configuration dans `env.json`
+- Ouvrez une issue sur le repository
+

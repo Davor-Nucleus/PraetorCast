@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "02/02",
+      "date": "04/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "03/02",
+      "date": "05/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,7 +19,7 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "04/02",
+      "date": "06/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -27,7 +27,7 @@
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "05/02",
+      "date": "07/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "06/02",
-      "title": "Space marine II",
-      "coverPath": "/public/scheduler/412bd08c-ace8-4fa5-88d3-6de6c1802b51.jpg",
+      "date": "08/05",
+      "title": "R.E.P.O",
+      "coverPath": "/public/scheduler/fd880c82-589f-423d-9fbd-985fbdd5c1e3.jpg",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "07/02",
+      "date": "09/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "08/02",
+      "date": "10/05",
       "title": "",
       "coverPath": "",
       "time": ""
