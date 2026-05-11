@@ -20,7 +20,6 @@ const SERVICE_COLORS = ['\x1b[96m', '\x1b[93m', '\x1b[95m', '\x1b[94m', '\x1b[92
 
 function esc(s)   { return `\x1b[${s}`; }
 function at(r, c) { return esc(`${r};${c}H`); }
-const CLR_EOL  = esc('0K'); // efface du curseur à la fin de ligne
 const CUR_HIDE = esc('?25l');
 const CUR_SHOW = esc('?25h');
 
@@ -42,12 +41,8 @@ const SERVICES = [
 
 const N = SERVICES.length;
 
-// ── Layout (lignes) ──────────────────────────────────────────────────────────
-// Rows 1..N+2     : panneau statut (box droite + titre gauche + séparateur)
-// Row  N+3        : en-têtes colonnes
-// Row  N+4        : séparateur colonnes  (─┼─)
-// Rows N+5..H     : logs en colonnes
-const PANEL_ROWS    = N + 3;   // 1 titre + N services + 1 bordure basse + 1 séparateur
+// ── Layout ────────────────────────────────────────────────────────────────────
+const PANEL_ROWS    = N + 3;
 const COL_HDR_ROW   = PANEL_ROWS + 1;
 const COL_SEP_ROW   = PANEL_ROWS + 2;
 const LOG_START_ROW = PANEL_ROWS + 3;
@@ -55,14 +50,19 @@ const LOG_START_ROW = PANEL_ROWS + 3;
 // ── État ──────────────────────────────────────────────────────────────────────
 const state = new Map(
   SERVICES.map((s, i) => [s.name, {
-    proc: null, restarts: 0, status: 'pending',
-    color: SERVICE_COLORS[i],
-    logs: [],   // { ts: 'HH:MM', text: string, isError: bool }
+    proc:         null,
+    restarts:     0,
+    status:       'pending',  // pending | running | stopped | failed | error | missing | off
+    manualOff:    false,      // true = arrêté volontairement, pas d'auto-restart
+    restartTimer: null,       // setTimeout en attente de redémarrage
+    color:        SERVICE_COLORS[i],
+    logs:         [],
   }])
 );
 
 let shuttingDown  = false;
 let redrawPending = false;
+let autoRestart   = false; // désactivé par défaut
 
 // ── Terminal ──────────────────────────────────────────────────────────────────
 function W() { return process.stdout.columns || 120; }
@@ -76,7 +76,7 @@ function colW(i) {
 function colX(i) { return Math.floor(W() / N) * i + 1; }
 function logRows() { return Math.max(0, H() - LOG_START_ROW + 1); }
 
-// ── Helpers texte ─────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function stripAnsi(s) { return s.replace(/\x1b\[[0-9;]*m/g, ''); }
 
 function sanitize(s) {
@@ -89,73 +89,79 @@ function sanitize(s) {
     .replace(/\s+/g, ' ').trim();
 }
 
-// Centre une chaîne (avec ANSI) dans `len` colonnes visibles
 function center(styledText, len) {
-  const vis  = stripAnsi(styledText).length;
-  const pad  = Math.max(0, len - vis);
+  const vis = stripAnsi(styledText).length;
+  const pad = Math.max(0, len - vis);
   return ' '.repeat(Math.floor(pad / 2)) + styledText + ' '.repeat(Math.ceil(pad / 2));
 }
 
-// Écrit exactement `len` caractères visibles (tronque et padde)
-function fixed(styledText, len) {
-  const vis = stripAnsi(styledText);
-  if (vis.length > len) return vis.slice(0, len);          // tronque (perte ANSI intentionnelle)
-  return styledText + ' '.repeat(len - vis.length);
+// ── Dot et couleur selon le statut ────────────────────────────────────────────
+function statusDot(entry) {
+  if (entry.status === 'running')                             return `${GREEN}●${R}`;
+  if (entry.status === 'off')                                 return `${DIM}●${R}`;
+  if (entry.status === 'failed' || entry.status === 'error')  return `${RED}●${R}`;
+  return `${YELLOW}○${R}`;
 }
 
-// ── Dessin du panneau statut (haut droite) ────────────────────────────────────
+function statusColor(entry) {
+  if (entry.status === 'running')                             return GREEN;
+  if (entry.status === 'off')                                 return DIM;
+  if (entry.status === 'failed' || entry.status === 'error')  return RED;
+  return YELLOW;
+}
+
+// ── Panneau statut (haut droite) ──────────────────────────────────────────────
 function drawPanel() {
   const w      = W();
   const boxCol = Math.max(1, w - BOX_WIDTH + 1);
 
-  // Ligne 1 : titre gauche + bordure haute box droite
+  // Ligne 1 : titre + raccourcis
   process.stdout.write(
     at(1, 1) + esc('2K') +
-    ` ${BOLD}PraetorCast${R}  ${DIM}[q] quitter${R}` +
+    ` ${BOLD}PraetorCast${R}  ${DIM}[q] quitter  [1-6] on/off  [r] ↺ ${R}` +
+    (autoRestart ? `${GREEN}${BOLD}ON ${R}` : `${RED}${BOLD}OFF${R}`) +
     at(1, boxCol) + DIM + '┌' + '─'.repeat(BOX_INNER) + '┐' + R
   );
 
-  // Lignes 2..N+1 : une ligne par service dans la box
+  // Lignes 2..N+1 : services
   let row = 2;
+  let idx = 1;
   for (const [name, entry] of state) {
-    const dot =
-      entry.status === 'running'                            ? `${GREEN}●${R}` :
-      entry.status === 'failed' || entry.status === 'error' ? `${RED}●${R}`   :
-                                                              `${YELLOW}○${R}`;
-    const statusColor =
-      entry.status === 'running'                            ? GREEN  :
-      entry.status === 'failed' || entry.status === 'error' ? RED    : YELLOW;
+    const dot     = statusDot(entry);
+    const sColor  = statusColor(entry);
     const rstVis  = entry.restarts > 0 ? `↺${entry.restarts}` : '';
-    const rstStyled = entry.restarts > 0 ? `${RED}↺${entry.restarts}${R}` : '';
+    const rstSty  = entry.restarts > 0 ? `${RED}↺${entry.restarts}${R}` : '';
 
-    const visible = ` ● ${name.padEnd(7)}  ${entry.status.padEnd(7)} ${rstVis} `;
-    const pad     = ' '.repeat(Math.max(0, BOX_INNER - visible.length));
-    const styled  =
-      ` ${dot} ${entry.color}${BOLD}${name.padEnd(7)}${R}  ` +
-      `${statusColor}${entry.status.padEnd(7)}${R} ${rstStyled}` + pad;
+    // Visible : `[N] ● Name    status  ↺X`
+    const visRaw = `[${idx}] ● ${name.padEnd(7)} ${entry.status.padEnd(7)} ${rstVis}`;
+    const pad    = ' '.repeat(Math.max(0, BOX_INNER - visRaw.length));
+
+    const styled =
+      `${DIM}[${idx}]${R} ${dot} ${entry.color}${BOLD}${name.padEnd(7)}${R} ` +
+      `${sColor}${entry.status.padEnd(7)}${R} ${rstSty}` + pad;
 
     process.stdout.write(at(row, boxCol) + DIM + '│' + R + styled + DIM + '│' + R);
     row++;
+    idx++;
   }
 
-  // Bordure basse + séparateur pleine largeur
   process.stdout.write(at(row,     boxCol) + DIM + '└' + '─'.repeat(BOX_INNER) + '┘' + R);
   process.stdout.write(at(row + 1, 1)      + DIM + '─'.repeat(w)               + R);
 }
 
-// ── Dessin des en-têtes de colonnes ───────────────────────────────────────────
+// ── En-têtes des colonnes ─────────────────────────────────────────────────────
 function drawColHeaders() {
   let header = '';
   let sep    = '';
 
   for (let i = 0; i < N; i++) {
-    const entry   = state.get(SERVICES[i].name);
-    const cw      = colW(i);
-    const isLast  = i === N - 1;
-    const inner   = isLast ? cw : cw - 1;
+    const entry  = state.get(SERVICES[i].name);
+    const cw     = colW(i);
+    const isLast = i === N - 1;
+    const inner  = isLast ? cw : cw - 1;
 
-    const nameStyled = `${entry.color}${BOLD}${SERVICES[i].name}${R}`;
-    header += center(nameStyled, inner) + (isLast ? '' : DIM + '│' + R);
+    const label = `${DIM}[${i + 1}]${R} ${entry.color}${BOLD}${SERVICES[i].name}${R}`;
+    header += center(label, inner) + (isLast ? '' : DIM + '│' + R);
     sep    += DIM + '─'.repeat(inner) + (isLast ? '' : '┼') + R;
   }
 
@@ -163,19 +169,19 @@ function drawColHeaders() {
   process.stdout.write(at(COL_SEP_ROW, 1) + esc('2K') + sep);
 }
 
-// ── Dessin des colonnes de logs ───────────────────────────────────────────────
+// ── Colonnes de logs ──────────────────────────────────────────────────────────
 function drawLogCols() {
   const rows = logRows();
   if (rows <= 0) return;
 
   for (let i = 0; i < N; i++) {
-    const entry   = state.get(SERVICES[i].name);
-    const cw      = colW(i);
-    const cx      = colX(i);
-    const isLast  = i === N - 1;
-    const inner   = isLast ? cw : cw - 1;  // largeur contenu sans séparateur
-    const msgW    = Math.max(1, inner - 6); // HH:MM(5) + espace(1)
-    const lines   = entry.logs.slice(-rows);
+    const entry  = state.get(SERVICES[i].name);
+    const cw     = colW(i);
+    const cx     = colX(i);
+    const isLast = i === N - 1;
+    const inner  = isLast ? cw : cw - 1;
+    const msgW   = Math.max(1, inner - 6);
+    const lines  = entry.logs.slice(-rows);
 
     for (let r = 0; r < rows; r++) {
       const log = lines[r];
@@ -198,12 +204,12 @@ function drawLogCols() {
   }
 }
 
-// ── Redraw complet ────────────────────────────────────────────────────────────
+// ── Redraw ────────────────────────────────────────────────────────────────────
 function refreshAll() {
   drawPanel();
   drawColHeaders();
   drawLogCols();
-  process.stdout.write(at(H(), 1)); // gare le curseur en bas
+  process.stdout.write(at(H(), 1));
 }
 
 function scheduleRedraw() {
@@ -223,12 +229,49 @@ function writeLog(name, rawText, isError = false) {
   if (entry.logs.length > MAX_LOG_BUF) entry.logs.shift();
 
   const logFile = path.join(LOGS_DIR, `${name.toLowerCase()}.log`);
-  try {
-    const full = new Date().toTimeString().slice(0, 8);
-    fs.appendFileSync(logFile, `${full} ${text}\n`);
-  } catch { /* ignore */ }
+  try { fs.appendFileSync(logFile, `${new Date().toTimeString().slice(0, 8)} ${text}\n`); }
+  catch { /* ignore */ }
 
   scheduleRedraw();
+}
+
+// ── Start / Stop manuel ───────────────────────────────────────────────────────
+function stopService(index) {
+  const svc   = SERVICES[index];
+  const entry = state.get(svc.name);
+
+  // Annule le redémarrage automatique en attente
+  if (entry.restartTimer) {
+    clearTimeout(entry.restartTimer);
+    entry.restartTimer = null;
+  }
+
+  entry.manualOff = true;
+  entry.status    = 'off';
+  entry.restarts  = 0;
+
+  if (entry.proc) {
+    try { entry.proc.kill(); } catch { /* ignore */ }
+  }
+
+  writeLog(svc.name, 'Arrêté manuellement.');
+}
+
+function startManual(index) {
+  const svc   = SERVICES[index];
+  const entry = state.get(svc.name);
+
+  if (entry.status === 'running') return; // déjà actif
+
+  entry.manualOff = false;
+  entry.restarts  = 0;
+  startService(svc, index, 0);
+}
+
+function toggleService(index) {
+  const entry = state.get(SERVICES[index].name);
+  if (entry.status === 'running') stopService(index);
+  else                            startManual(index);
 }
 
 // ── Gestion des services ──────────────────────────────────────────────────────
@@ -271,17 +314,24 @@ function startService(service, index, restartCount = 0) {
   );
 
   proc.on('exit', (code, signal) => {
-    if (shuttingDown) return;
+    if (shuttingDown)    return;
+    if (entry.manualOff) return; // arrêt volontaire → pas d'auto-restart
+
     entry.status = 'stopped';
     writeLog(service.name, `Arrêté (${signal ?? `code ${code}`})`, true);
 
-    if (restartCount < MAX_RESTARTS) {
+    if (autoRestart && restartCount < MAX_RESTARTS) {
       const delay = BASE_DELAY_MS * Math.pow(1.5, restartCount);
       writeLog(service.name, `Redémarrage dans ${(delay / 1000).toFixed(1)}s...`);
-      setTimeout(() => startService(service, index, restartCount + 1), delay);
-    } else {
+      entry.restartTimer = setTimeout(() => {
+        entry.restartTimer = null;
+        startService(service, index, restartCount + 1);
+      }, delay);
+    } else if (autoRestart) {
       entry.status = 'failed';
       writeLog(service.name, `Abandon après ${MAX_RESTARTS} tentatives.`, true);
+    } else {
+      writeLog(service.name, `Auto-restart OFF — appuyez sur [${index + 1}] pour relancer.`);
     }
   });
 
@@ -291,12 +341,13 @@ function startService(service, index, restartCount = 0) {
   });
 }
 
-// ── Arrêt ─────────────────────────────────────────────────────────────────────
+// ── Arrêt global ──────────────────────────────────────────────────────────────
 function shutdown() {
   if (shuttingDown) return;
   shuttingDown = true;
   for (const [name, entry] of state) {
     writeLog(name, 'Arrêt en cours...', true);
+    if (entry.restartTimer) clearTimeout(entry.restartTimer);
     try { entry.proc?.kill(); } catch { /* ignore */ }
   }
   setTimeout(() => {
@@ -321,7 +372,14 @@ if (process.stdin.isTTY) {
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (key) => {
-    if (key === 'q' || key === '') shutdown();
+    if (key === 'q' || key === '') { shutdown(); return; }
+
+    // r : toggle auto-restart global
+    if (key === 'r') { autoRestart = !autoRestart; refreshAll(); return; }
+
+    // 1–6 : toggle start/stop d'un service
+    const num = parseInt(key, 10);
+    if (num >= 1 && num <= N) toggleService(num - 1);
   });
 }
 
