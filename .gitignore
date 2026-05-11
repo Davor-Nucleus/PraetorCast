@@ -1,4 +1,5 @@
 env.json
+logs/
 
 janus core/*
 praetorcast-core/*
