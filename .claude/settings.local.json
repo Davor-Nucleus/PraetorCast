@@ -16,7 +16,10 @@
       "Bash(Remove-Item \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\praetorcast-core\\\\templates\\\\discord_presence.html\" -Force)",
       "Bash(Write-Host \"Fichiers supprimés\")",
       "Bash(rm \"c:/Users/pc-rutra/Desktop/dev/rust/PraetorCast/ws_discord_presence.cjs\" \\\\ *)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Select-String discord *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\pc-rutra\\Desktop\\dev\\rust\\PraetorCast"

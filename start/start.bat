@@ -20,4 +20,7 @@ cd ..
 @start cmd /k "line.exe"
 
 @echo Démarrage du serveur de chat youtube...
-@start cmd /k "node ./ws_chat_youtube.cjs"
+@start cmd /k "node ./ws/ws_chat_youtube.cjs"
+
+@echo Démarrage du serveur Discord Presence...
+@start cmd /k "node ./ws/ws_discord_presence.js"
