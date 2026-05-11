@@ -5,7 +5,21 @@
       "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\" -Recurse -Force -Directory | Where-Object { $_.FullName -notmatch '\\\\.git' -and $_.FullName -notmatch 'node_modules' -and $_.FullName -notmatch 'target' } | Select-Object @{Name=\"Path\";Expression={$_.FullName.Replace\\(\"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\\",\"\"\\)}} | Sort-Object Path | Format-Table -AutoSize)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\start\" -Force)",
       "Bash(git config *)",
-      "Bash(cargo build *)"
+      "Bash(cargo build *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\praetorcast-core\" -Recurse -Include \"*.rs\", \"*.html\", \"*.toml\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(npm install *)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\ws_discord_presence.cjs\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\debug_discord_ipc.cjs\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\praetorcast-core\\\\src\\\\discord_presence.rs\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\pc-rutra\\\\Desktop\\\\dev\\\\rust\\\\PraetorCast\\\\praetorcast-core\\\\templates\\\\discord_presence.html\" -Force)",
+      "Bash(Write-Host \"Fichiers supprimés\")",
+      "Bash(rm \"c:/Users/pc-rutra/Desktop/dev/rust/PraetorCast/ws_discord_presence.cjs\" \\\\ *)",
+      "Bash(npm uninstall *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\pc-rutra\\Desktop\\dev\\rust\\PraetorCast"
     ]
   }
 }
