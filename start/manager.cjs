@@ -32,8 +32,8 @@ const BOX_WIDTH     = BOX_INNER + 2;
 
 const SERVICES = [
   { name: 'Core',    cmd: 'praetorcast-core.exe', args: [],                                startDelay: 0    },
-  { name: 'Janus',   cmd: 'JanusCore.exe',         args: [],                                startDelay: 500  },
-  { name: 'Phonos',  cmd: 'PhonosCore.exe',         args: [],                                startDelay: 2000 },
+  { name: 'Janus',   cmd: 'JanusCore.exe',  args: [], startDelay: 500,  newWindow: true },
+  { name: 'Phonos',  cmd: 'PhonosCore.exe', args: [], startDelay: 2000, newWindow: true },
   { name: 'Line',    cmd: 'line.exe',               args: [],                                startDelay: 1000 },
   { name: 'YT-Chat', cmd: 'node',                   args: ['./ws/ws_chat_youtube.cjs'],     startDelay: 1500 },
   { name: 'Discord', cmd: 'node',                   args: ['./ws/ws_discord_presence.js'],  startDelay: 1500 },
@@ -296,22 +296,33 @@ function startService(service, index, restartCount = 0) {
       : `Redémarrage #${restartCount}...`
   );
 
-  const proc = spawn(service.cmd, service.args, {
-    cwd: ROOT, shell: false, windowsHide: true,
-  });
+  let proc;
+  if (service.newWindow) {
+    const exePath = path.join(ROOT, service.cmd);
+    const extraArgs = service.args.length ? ' ' + service.args.join(' ') : '';
+    // shell:true → cmd /c ; start ouvre une vraie nouvelle console visible même depuis un process sans fenêtre
+    proc = spawn(
+      `start "${service.name}" /D "${ROOT}" /wait "${exePath}"${extraArgs}`,
+      [],
+      { cwd: ROOT, shell: true, windowsHide: true }
+    );
+  } else {
+    proc = spawn(service.cmd, service.args, {
+      cwd: ROOT, shell: false, windowsHide: true,
+    });
+    proc.stdout?.on('data', (data) =>
+      data.toString().trimEnd().split('\n').filter(Boolean)
+        .forEach(line => writeLog(service.name, line))
+    );
+    proc.stderr?.on('data', (data) =>
+      data.toString().trimEnd().split('\n').filter(Boolean)
+        .forEach(line => writeLog(service.name, line, true))
+    );
+  }
 
   entry.proc     = proc;
   entry.status   = 'running';
   entry.restarts = restartCount;
-
-  proc.stdout?.on('data', (data) =>
-    data.toString().trimEnd().split('\n').filter(Boolean)
-      .forEach(line => writeLog(service.name, line))
-  );
-  proc.stderr?.on('data', (data) =>
-    data.toString().trimEnd().split('\n').filter(Boolean)
-      .forEach(line => writeLog(service.name, line, true))
-  );
 
   proc.on('exit', (code, signal) => {
     if (shuttingDown)    return;

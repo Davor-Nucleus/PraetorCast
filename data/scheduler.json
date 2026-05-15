@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "04/05",
+      "date": "11/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "05/05",
+      "date": "12/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,7 +19,7 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "06/05",
+      "date": "13/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -27,7 +27,7 @@
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "07/05",
+      "date": "14/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "08/05",
-      "title": "R.E.P.O",
-      "coverPath": "/public/scheduler/fd880c82-589f-423d-9fbd-985fbdd5c1e3.jpg",
+      "date": "15/05",
+      "title": "Sea Of Thieves",
+      "coverPath": "/public/scheduler/6866547f-7ea5-4602-95fd-b5001dc02400.jpg",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "09/05",
+      "date": "16/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "10/05",
+      "date": "17/05",
       "title": "",
       "coverPath": "",
       "time": ""
