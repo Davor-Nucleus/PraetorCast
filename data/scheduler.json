@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "11/05",
+      "date": "18/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "12/05",
+      "date": "19/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,15 +19,15 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "13/05",
-      "title": "",
-      "coverPath": "",
-      "time": ""
+      "date": "20/05",
+      "title": "REPO X ANNIV de SEBA",
+      "coverPath": "/public/scheduler/b8859623-2d0b-4a14-9887-d505e83b3a82.jpg",
+      "time": "21h"
     },
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "14/05",
+      "date": "21/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "15/05",
-      "title": "Sea Of Thieves",
-      "coverPath": "/public/scheduler/6866547f-7ea5-4602-95fd-b5001dc02400.jpg",
+      "date": "22/05",
+      "title": "Civlisation VII",
+      "coverPath": "/public/scheduler/2a8fec83-ce6b-4b4b-9477-6db1c3499eed.png",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "16/05",
+      "date": "23/05",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "17/05",
+      "date": "24/05",
       "title": "",
       "coverPath": "",
       "time": ""
