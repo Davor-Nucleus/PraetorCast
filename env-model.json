@@ -12,6 +12,7 @@
     "YOUTUBE_CHANNEL_ID": "YOUTUBE_CHANNEL_ID",
     "DEVICE_NAME": "default",
     "VOLUME": 0.5,
+    "normalizationEnabled": false,
     "SOUNDBOARD_SHORTCUTS": {
         "1": "alt+1",
         "2": "alt+2",
