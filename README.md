@@ -139,9 +139,18 @@ Créez le fichier `env.json` à partir de `env-model.json` :
     "BACK_FONT_BODY": "Arial",
     "FRONT_FONT_TITLE": "Arial",
     "FRONT_FONT_BODY": "Arial",
-    "AUDIO_DEVICE_NAME" : ""
+    "AUDIO_DEVICE_NAME" : "",
+    "OBS_WS_HOST": "localhost",
+    "OBS_WS_PORT": 4455,
+    "OBS_WS_PASSWORD": "OBS_WS_PASSWORD",
+    "OBS_AUDIO_SOURCE": "music",
+    "OBS_LIMITER_FILTER": "Limiter"
 }
 ```
+
+> Les clés `OBS_*` sont optionnelles : en leur absence, les valeurs par défaut ci-dessus
+> s'appliquent (host `localhost`, port `4455`, mot de passe vide, source `music`,
+> filtre `Limiter`).
 
 
 ### Configuration des token
@@ -184,6 +193,24 @@ Pour la présence Discord (participants en vocal) :
 3. Récupérez le `Client ID` et le `Client Secret`
 3. Dans "redirect" y mettre "https://localhost"
 4. Ajoutez `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` dans `env.json`
+
+### Configuration OBS (limiteur audio)
+
+praetorcast-core peut piloter le filtre **Limiter** d'OBS appliqué à une source audio,
+directement depuis la page `/music-config`, via obs-websocket v5.
+
+1. Dans OBS : **Outils → Paramètres du serveur WebSocket** → activer le serveur, noter le
+   port et le mot de passe.
+2. Renseignez dans `env.json` :
+   - `OBS_WS_HOST` / `OBS_WS_PORT` : adresse du serveur obs-websocket (défaut `localhost:4455`)
+   - `OBS_WS_PASSWORD` : mot de passe (laisser vide `""` si l'authentification est désactivée)
+   - `OBS_AUDIO_SOURCE` : nom **exact** de la source audio à limiter (défaut `music`)
+   - `OBS_LIMITER_FILTER` : nom du filtre Limiter (défaut `Limiter`)
+3. La source audio doit déjà exister dans OBS. Le filtre Limiter, lui, est **créé
+   automatiquement** s'il est absent à la première utilisation.
+
+> La configuration est relue à chaque requête : modifier `OBS_AUDIO_SOURCE` /
+> `OBS_LIMITER_FILTER` ne nécessite pas de redémarrer praetorcast-core.
 
 
 ## Démarrage
@@ -284,6 +311,17 @@ node ./ws/ws_discord_presence.js
 - **`POST /api/scheduler-upload`** : Upload d'image pour le planning
 - **`POST /api/scheduler-background-upload`** : Upload d'image de fond
 
+#### API OBS (limiteur audio)
+
+Pilote le filtre **Limiter** d'OBS sur la source audio configurée (`OBS_AUDIO_SOURCE`,
+défaut `music`) via obs-websocket v5. Le filtre est **créé automatiquement** s'il n'existe
+pas encore. Toutes les routes renvoient l'état `{ "enabled": bool, "threshold": float }`.
+
+- **`GET /api/obs/limiter`** : État courant du filtre
+- **`GET` / `POST` `/api/obs/limiter/add`** : Augmente le seuil de 1 dB
+- **`GET` / `POST` `/api/obs/limiter/subtract`** : Diminue le seuil de 1 dB
+- **`GET /api/obs/limiter/toggle`** : Active/désactive le filtre
+
 ### JanusCore - Serveur de Musique
 
 #### Gestion des dossiers
@@ -308,12 +346,11 @@ node ./ws/ws_discord_presence.js
 - **`GET /api/volume/add`** : Augmente le volume
 - **`GET /api/volume/subtract`** : Diminue le volume
 
-#### Limiteur
+#### Normalisation EBU R128
 
-- **`GET /api/limiter`** : Récupère la valeur du limiteur en dB
-- **`POST /api/limiter`** : Définit le limiteur (corps: `{"limiter_db": -3.0}`)
-- **`GET /api/limiter/add`** : Augmente le limiteur
-- **`GET /api/limiter/subtract`** : Diminue le limiteur
+- **`GET /api/normalization`** : État de la normalisation (`{ "normalization_enabled": bool }`)
+- **`POST /api/normalization`** : Active/désactive (corps: `{"enabled": true}`)
+- **`GET /api/normalization/toggle`** : Bascule l'état de la normalisation
 
 #### État et informations
 

@@ -28,5 +28,10 @@
     "BACK_FONT_BODY": "Arial",
     "FRONT_FONT_TITLE": "Arial",
     "FRONT_FONT_BODY": "Arial",
-    "AUDIO_DEVICE_NAME" : ""
+    "AUDIO_DEVICE_NAME" : "",
+    "OBS_WS_HOST": "localhost",
+    "OBS_WS_PORT": 4455,
+    "OBS_WS_PASSWORD": "OBS_WS_PASSWORD",
+    "OBS_AUDIO_SOURCE": "music",
+    "OBS_LIMITER_FILTER": "Limiter"
 }

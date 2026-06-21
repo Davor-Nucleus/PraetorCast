@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "25/05",
+      "date": "15/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "26/05",
+      "date": "16/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,7 +19,7 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "27/05",
+      "date": "17/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -27,7 +27,7 @@
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "28/05",
+      "date": "18/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "29/05",
-      "title": "Plague INC",
-      "coverPath": "/public/scheduler/d0e2f7aa-dcf6-4cfd-9991-990077aa3ebd.jpg",
+      "date": "19/06",
+      "title": "Helldivers II",
+      "coverPath": "/public/scheduler/97da68a6-6465-465d-b416-8ed0d6ccb182.jpg",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "30/05",
+      "date": "20/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "31/05",
+      "date": "21/06",
       "title": "",
       "coverPath": "",
       "time": ""
