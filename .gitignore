@@ -4,6 +4,7 @@ logs/
 janus core/*
 praetorcast-core/*
 node_modules/*
+line/*
 
 # Musique et sons
 public/music/*

@@ -1,1 +1,1 @@
-Dans ce dossier vous devez y mettre les fichiers .ttf et mettre à jour le "FRONT_FONT_TITLE" et "FRONT_FONT_BODY".
+Dans ce dossier vous devez y mettre les fichiers .ttf et mettre à jour le "FRONT_FONT_TITLE" dans env.json.

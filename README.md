@@ -122,7 +122,6 @@ Créez le fichier `env.json` à partir de `env-model.json` :
     "TWITCH_OAUTH_TOKEN": "TWITCH_OAUTH_TOKEN",
     "TWITCH_CHANNEL_NAME": "TWITCH_CHANNEL_NAME",
     "YOUTUBE_CHANNEL_ID": "YOUTUBE_CHANNEL_ID",
-    "DEVICE_NAME": "default",
     "VOLUME": 0.5,
     "SOUNDBOARD_SHORTCUTS": {
         "1": "alt+1",
@@ -135,11 +134,7 @@ Créez le fichier `env.json` à partir de `env-model.json` :
         "8": "alt+8",
         "9": "alt+9"
     },
-    "BACK_FONT_TITLE": "Arial",
-    "BACK_FONT_BODY": "Arial",
     "FRONT_FONT_TITLE": "Arial",
-    "FRONT_FONT_BODY": "Arial",
-    "AUDIO_DEVICE_NAME" : "",
     "OBS_WS_HOST": "localhost",
     "OBS_WS_PORT": 4455,
     "OBS_WS_PASSWORD": "OBS_WS_PASSWORD",
