@@ -64,7 +64,7 @@ PraetorCast/
 │   │   ├── public/soundboard/ # Fichiers audio
 │   │   └── env.json          # Configuration PhonosCore
 │   │
-│   └── janus_common/          # Bibliothèque partagée
+│   └── janus_nucleus/          # Bibliothèque partagée
 │       ├── src/              # Code commun
 │       │   ├── config.rs     # Configuration
 │       │   ├── logger.rs     # Système de logs
@@ -434,7 +434,7 @@ Pour intégrer les différentes fonctionnalités dans OBS Studio :
 - **Tokio** : Runtime asynchrone
 - **Serde/Serde JSON** : Sérialisation/désérialisation
 
-### janus_common
+### janus_nucleus
 
 - **winapi** : Interface Windows native pour la GUI
 - **Serde** : Configuration JSON

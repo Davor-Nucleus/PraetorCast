@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "15/06",
+      "date": "22/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "16/06",
+      "date": "23/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,7 +19,7 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "17/06",
+      "date": "24/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -27,7 +27,7 @@
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "18/06",
+      "date": "25/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "19/06",
-      "title": "Helldivers II",
-      "coverPath": "/public/scheduler/97da68a6-6465-465d-b416-8ed0d6ccb182.jpg",
+      "date": "26/06",
+      "title": "Darktide",
+      "coverPath": "/public/scheduler/d2fb8f6c-1650-4e1f-8f16-c2b0ca8020c4.jpg",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "20/06",
+      "date": "27/06",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "21/06",
+      "date": "28/06",
       "title": "",
       "coverPath": "",
       "time": ""
