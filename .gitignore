@@ -12,6 +12,11 @@ public/soundboard/*
 !public/soundboard/song.txt
 
 
+# État runtime réécrit par l'app (un « Save » le modifie) : ne pas suivre pour
+# éviter les conflits à chaque git pull.
+/data/banner.json
+
+
 public/banner/*
 !public/banner/banner.txt
 
