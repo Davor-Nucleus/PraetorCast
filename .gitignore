@@ -1,7 +1,75 @@
-env.json
-logs/
+# Rust builds
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
 
-node_modules/*
+# Rust cache
+**/target/
+*.orig
+*.rej
+
+# Binaries compiles
+*.exe
+*.dll
+*.so
+*.dylib
+
+# IDE & editeurs
+/.vscode/
+/.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Logs
+*.log
+*.log.*
+logs/
+*.out
+
+# Environment & configuration sensible
+.env
+.env.local
+.env.*.local
+env.json
+env-model.json
+*.secret
+*.key
+*.pem
+config.local.*
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*.temp
 
 # Musique et sons
 public/music/*
@@ -11,11 +79,9 @@ public/music/*
 public/soundboard/*
 !public/soundboard/song.txt
 
-
-# État runtime réécrit par l'app (un « Save » le modifie) : ne pas suivre pour
-# éviter les conflits à chaque git pull.
+# Etat runtime reecrit par l'app (un "Save" le modifie)
 /data/banner.json
-
+/data/scheduler.json
 
 public/banner/*
 !public/banner/banner.txt
@@ -23,6 +89,36 @@ public/banner/*
 public/scheduler/*
 !public/scheduler/scheduler.txt
 
-
 public/font/*
 !public/font/font.txt
+
+# Fichiers de build
+dist/
+build/
+out/
+
+# Fichiers de cache
+.cache/
+*.cache
+.parcel-cache/
+
+# Fichiers de test
+*.test
+*.spec
+coverage/
+.nyc_output/
+
+# Fichiers de compression
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Fichiers de documentation generes
+doc/
+docs/_build/
+
+# Fichiers de profiling
+*.prof
+perf.data*
