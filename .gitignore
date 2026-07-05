@@ -9,12 +9,6 @@ Cargo.lock
 *.orig
 *.rej
 
-# Binaries compiles
-*.exe
-*.dll
-*.so
-*.dylib
-
 # IDE & editeurs
 /.vscode/
 /.idea/
