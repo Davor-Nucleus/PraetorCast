@@ -33,11 +33,11 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 
 PraetorCast est composé de cinq applications principales qui fonctionnent en synergie :
 
-1. 🌐 **praetorcast-core** : Serveur web principal (Rust/Actix-web) - Interface web et gestion des overlays.
-2. 🎵 **JanusCore** : Serveur de musique (Rust/Warp) - Lecture de musique avec support multi-format et normalisation EBU R128.
-3. 🔊 **PhonosCore** : Serveur de soundboard (Rust/Warp) - Gestion des effets sonores synchronisée avec la musique.
-4. 💬 **ws_chat_youtube** : Relais WebSocket pour le chat YouTube (Node.js).
-5. 🎮 **ws_discord_presence** : Relais WebSocket pour la présence Discord (Node.js).
+1.  **praetorcast-core** : Serveur web principal (Rust/Actix-web) - Interface web et gestion des overlays.
+2.  **JanusCore** : Serveur de musique (Rust/Warp) - Lecture de musique avec support multi-format.
+3.  **PhonosCore** : Serveur de soundboard (Rust/Warp) - Gestion des effets sonores synchronisée avec la musique.
+4.  **ws_chat_youtube** : Relais WebSocket pour le chat YouTube (Node.js).
+5.  **ws_discord_presence** : Relais WebSocket pour la présence Discord (Node.js).
 
 ---
 
