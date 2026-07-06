@@ -12,6 +12,7 @@ Cargo.lock
 # IDE & editeurs
 /.vscode/
 /.idea/
+.claude/
 PraetorCast.code-workspace
 *.code-workspace
 *.sublime-project
