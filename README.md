@@ -2,7 +2,7 @@
   <!-- TODO: Insérer le logo du projet ici si vous en avez un -->
   <!-- <img src="public/logo.png" alt="PraetorCast Logo" width="200"/> -->
 
-  # 🎭 PraetorCast
+  # PraetorCast
 
   **L'outil ultime pour les streamers, gérant overlays, musique, soundboard et chat via OBS.**
 
@@ -122,11 +122,64 @@ Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`.
 > [!NOTE]
 > Les clés `OBS_*` sont optionnelles. En leur absence, les valeurs par défaut s'appliquent (`localhost:4455`, source `music`, filtre `Limiter`).
 
-### 2. Configuration des APIs externes
+### 2. Configuration des tokens (Twitch)
 
-- **Twitch** : Récupérez votre `Client ID` sur le [Portail Développeur Twitch](https://dev.twitch.tv/console/apps) et générez un token OAuth avec les scopes nécessaires (`user:read:email`, `chat:read`, etc.).
-- **YouTube** : Renseignez le `YOUTUBE_CHANNEL_ID` trouvable dans l'onglet "À propos" de votre chaîne.
-- **Discord** : Créez une application sur le [Portail Développeur Discord](https://discord.com/developers/applications) pour récupérer le Client ID et le Client Secret. (Redirect URI à renseigner sur le portail : `https://localhost`).
+#### 1. Obtenir le Client ID
+
+1. Allez sur https://dev.twitch.tv/console/apps
+2. Connectez-vous avec votre compte Twitch
+3. Créez une application
+4. Récupérez le Client ID
+
+#### 2. Obtenir le Token OAuth
+
+Remplacez `TON_CLIENT_ID` dans cette URL :
+```text
+https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread
+```
+
+Après autorisation, récupérez le `access_token` dans l'URL.
+
+#### 3. Tester la configuration
+
+```bash
+curl -H "Client-ID: TON_CLIENT_ID" -H "Authorization: Bearer TON_OAUTH_TOKEN" https://api.twitch.tv/helix/users
+```
+
+### 3. Configuration YouTube
+
+Pour récupérer l'ID de la chaîne YouTube :
+1. Allez dans l'onglet "À propos" de votre chaîne
+2. Cliquez sur "Partager la chaîne"
+3. Sélectionnez "Copier l'ID de la chaîne"
+4. Ajoutez `YOUTUBE_CHANNEL_ID` dans `env.json`
+
+### 4. Configuration Discord
+
+Pour la présence Discord (participants en vocal) :
+1. Allez sur https://discord.com/developers/applications
+2. Créez une application
+3. Récupérez le `Client ID` et le `Client Secret`
+4. Dans "redirect" y mettre "https://localhost"
+5. Ajoutez `DISCORD_CLIENT_ID` et `DISCORD_CLIENT_SECRET` dans `env.json`
+
+### 5. Configuration OBS (limiteur audio)
+
+praetorcast-core peut piloter le filtre **Limiter** d'OBS appliqué à une source audio,
+directement depuis la page `/music-config`, via obs-websocket v5.
+
+1. Dans OBS : **Outils → Paramètres du serveur WebSocket** → activer le serveur, noter le
+   port et le mot de passe.
+2. Renseignez dans `env.json` :
+   - `OBS_WS_HOST` / `OBS_WS_PORT` : adresse du serveur obs-websocket (défaut `localhost:4455`)
+   - `OBS_WS_PASSWORD` : mot de passe (laisser vide `""` si l'authentification est désactivée)
+   - `OBS_AUDIO_SOURCE` : nom **exact** de la source audio à limiter (défaut `music`)
+   - `OBS_LIMITER_FILTER` : nom du filtre Limiter (défaut `Limiter`)
+3. La source audio doit déjà exister dans OBS. Le filtre Limiter, lui, est **créé
+   automatiquement** s'il est absent à la première utilisation.
+
+> [!NOTE]
+> La configuration est relue à chaque requête : modifier `OBS_AUDIO_SOURCE` / `OBS_LIMITER_FILTER` ne nécessite pas de redémarrer praetorcast-core.
 
 ---
 
