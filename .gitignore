@@ -80,6 +80,8 @@ public/soundboard/*
 /data/banner.json
 /data/scheduler.json
 
+/public/banner/*
+
 public/banner/*
 !public/banner/banner.txt
 
