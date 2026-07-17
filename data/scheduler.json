@@ -3,7 +3,7 @@
     {
       "dayIndex": 0,
       "day": "MON",
-      "date": "22/06",
+      "date": "13/07",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -11,7 +11,7 @@
     {
       "dayIndex": 1,
       "day": "TUE",
-      "date": "23/06",
+      "date": "14/07",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -19,7 +19,7 @@
     {
       "dayIndex": 2,
       "day": "WED",
-      "date": "24/06",
+      "date": "15/07",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -27,7 +27,7 @@
     {
       "dayIndex": 3,
       "day": "THU",
-      "date": "25/06",
+      "date": "16/07",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -35,15 +35,15 @@
     {
       "dayIndex": 4,
       "day": "FRI",
-      "date": "26/06",
-      "title": "Darktide",
-      "coverPath": "/public/scheduler/d2fb8f6c-1650-4e1f-8f16-c2b0ca8020c4.jpg",
+      "date": "17/07",
+      "title": "Space Marine II",
+      "coverPath": "/public/scheduler/48170f45-33bf-4ddc-9170-f848e4d4d456.jpg",
       "time": "21h15"
     },
     {
       "dayIndex": 5,
       "day": "SAT",
-      "date": "27/06",
+      "date": "18/07",
       "title": "",
       "coverPath": "",
       "time": ""
@@ -51,7 +51,7 @@
     {
       "dayIndex": 6,
       "day": "SUN",
-      "date": "28/06",
+      "date": "19/07",
       "title": "",
       "coverPath": "",
       "time": ""
