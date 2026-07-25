@@ -79,6 +79,10 @@ public/soundboard/*
 # Etat runtime reecrit par l'app (un "Save" le modifie)
 /data/banner.json
 /data/scheduler.json
+/data/channel_points.json
+
+/data/scheduler.json
+/public/channelpoint/*
 
 /public/banner/*
 
@@ -121,3 +125,5 @@ docs/_build/
 # Fichiers de profiling
 *.prof
 perf.data*
+
+

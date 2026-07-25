@@ -135,7 +135,7 @@ Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`.
 
 Remplacez `TON_CLIENT_ID` dans cette URL :
 ```text
-https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread
+https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread%20channel%3Aread%3Aredemptions
 ```
 
 Après autorisation, récupérez le `access_token` dans l'URL.
