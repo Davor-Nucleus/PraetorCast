@@ -95,6 +95,10 @@ public/scheduler/*
 public/font/*
 !public/font/font.txt
 
+
+compile/
+
+
 # Fichiers de build
 dist/
 build/
@@ -125,5 +129,4 @@ docs/_build/
 # Fichiers de profiling
 *.prof
 perf.data*
-
 

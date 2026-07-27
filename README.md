@@ -15,8 +15,23 @@
 
 PraetorCast est un outil complet pour les streamers, permettant de faciliter la gestion du stream avec une intégration native dans OBS grâce aux sources "navigateur web". Développé majoritairement en **Rust**, il garantit des performances optimales avec une très faible latence et une consommation mémoire minimale.
 
+## ✨ Fonctionnalités principales
+
+- **Overlays OBS clés en main** — horloge, bannière tournante, planning hebdomadaire, musique en cours, emote corner, infos followers.
+- **Chat multi-plateformes** — Twitch (horizontal / vertical) et YouTube, affichés côte à côte dans OBS.
+- **Channel Points Twitch** — alertes personnalisées avec image et son propres à chaque récompense.
+- **Présence Discord** — affichage en direct des membres connectés en vocal.
+- **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV/AAC/MP4, playlists par dossier, normalisation EBU R128.
+- **Soundboard (PhonosCore)** — effets sonores qui mettent automatiquement la musique en pause le temps de jouer.
+- **Pilotage OBS** — contrôle du filtre Limiter via obs-websocket v5, sans quitter la page de configuration.
+- **Routage audio Windows (line)** — capture loopback WASAPI et redirection vers un autre périphérique.
+- **Pages de configuration web** — bannière, planning, musique / soundboard et channel points, éditables depuis le navigateur.
+- **Temps réel** — WebSockets pour rafraîchir les overlays sans recharger les sources OBS.
+- **Lancement et compilation automatisés** — manager de démarrage (`start.bat`) et script de build unifié (`build.cjs`).
+
 ## 📋 Sommaire
 
+- [Fonctionnalités principales](#-fonctionnalités-principales)
 - [Vue d'ensemble](#-vue-densemble)
 - [Architecture](#-architecture)
 - [Prérequis](#-prérequis)
@@ -67,6 +82,10 @@ PraetorCast/
 ├── start/                     # Scripts de démarrage
 │   └── start.bat              # Script batch pour lancer tous les services
 │
+├── compile/                   # Scripts de compilation
+│   ├── build.cjs              # Compile les binaires Rust et les copie à la racine
+│   └── build.bat              # Lanceur (double-clic)
+│
 ├── praetorcast-core.exe       # Exécutables compilés
 ├── JanusCore.exe              
 ├── PhonosCore.exe             
@@ -86,7 +105,25 @@ PraetorCast/
   ```bash
   npm install
   ```
+- **Rust / cargo** *(uniquement pour recompiler)* - Les quatre services sont des binaires Rust. [Installer Rust](https://rustup.rs)
 - **FFMPEG** *(Optionnel)* - Recommandé pour le traitement audio avancé. [Télécharger FFMPEG](https://ffmpeg.org/)
+
+### Compilation
+
+Les dépôts sources (`praetorcast-core/`, `janus core/`, `line/`) sont des dossiers **frères** de `PraetorCast/`. Le script `compile/build.cjs` les compile en release et dépose les `.exe` à la racine :
+
+```bash
+node ./compile/build.cjs             # les 4 cibles (incrémental)
+node ./compile/build.cjs janus line  # cibles au choix : core | janus | phonos | line
+node ./compile/build.cjs --clean     # vide les target/ puis recompile tout à neuf
+node ./compile/build.cjs --help
+```
+
+`--clean` lance un `cargo clean` complet sur les dépôts concernés (dépendances comprises) avant de compiler : utile pour repartir d'une base saine ou libérer de l'espace disque, mais compter plusieurs minutes de recompilation.
+
+> [!NOTE]
+> Le script refuse de démarrer si un `.exe` est verrouillé par un service en cours : quittez PraetorCast (`[q]` dans le manager) avant de recompiler. Il ne touche jamais à `public/`, `data/` ni `env.json`.
+> Si vos dépôts ne sont pas dans le dossier parent, définissez `PRAETORCAST_SRC`.
 
 ---
 

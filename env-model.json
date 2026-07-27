@@ -23,7 +23,9 @@
         "8": "alt+8",
         "9": "alt+9"
     },
-    "FRONT_FONT_TITLE": "Arial",
+    "FRONT_FONT_TITLE": "CinzelDecorative-Regular.ttf",
+    "janusCoreGui": true,
+    "phonosCoreGui": true,
     "OBS_WS_HOST": "localhost",
     "OBS_WS_PORT": 4455,
     "OBS_WS_PASSWORD": "OBS_WS_PASSWORD",

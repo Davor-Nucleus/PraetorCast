@@ -1,6 +1,6 @@
 'use strict';
 
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const path = require('path');
 const fs   = require('fs');
 
@@ -79,14 +79,31 @@ function logRows() { return Math.max(0, H() - LOG_START_ROW + 1); }
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function stripAnsi(s) { return s.replace(/\x1b\[[0-9;]*m/g, ''); }
 
+// On retire uniquement ce qui casserait l'affichage en colonnes : séquences ANSI et
+// caractères de contrôle. L'ancienne version supprimait aussi tout ce qui ressemblait
+// à une balise ou à `clé="valeur"`, ce qui mutilait les vrais logs (un message Rust
+// contenant `<...>` ou une paire clé/valeur perdait la moitié de son contenu).
 function sanitize(s) {
-  return s
-    .replace(/<[^>]*>/g, '')
-    .replace(/\w[\w-]*="[^"]*"/g, '')
-    .replace(/\/>/g, '')
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/\s+/g, ' ').trim();
+  return stripAnsi(s)
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Sous Windows, les services `newWindow` sont lancés via `cmd /c start … /wait` :
+// `proc.kill()` ne termine que le cmd.exe intermédiaire et laisse l'exécutable
+// tourner, port et périphérique audio compris — le redémarrage suivant échoue alors
+// au bind. `taskkill /T` termine tout l'arbre.
+function killTree(proc) {
+  if (!proc || proc.pid === undefined) return;
+
+  if (process.platform === 'win32') {
+    execFile('taskkill', ['/PID', String(proc.pid), '/T', '/F'], () => { /* déjà mort : rien à faire */ });
+    return;
+  }
+
+  try { proc.kill(); } catch { /* ignore */ }
 }
 
 function center(styledText, len) {
@@ -250,9 +267,7 @@ function stopService(index) {
   entry.status    = 'off';
   entry.restarts  = 0;
 
-  if (entry.proc) {
-    try { entry.proc.kill(); } catch { /* ignore */ }
-  }
+  killTree(entry.proc);
 
   writeLog(svc.name, 'Arrêté manuellement.');
 }
@@ -359,7 +374,7 @@ function shutdown() {
   for (const [name, entry] of state) {
     writeLog(name, 'Arrêt en cours...', true);
     if (entry.restartTimer) clearTimeout(entry.restartTimer);
-    try { entry.proc?.kill(); } catch { /* ignore */ }
+    killTree(entry.proc);
   }
   setTimeout(() => {
     process.stdout.write(esc('r') + CUR_SHOW + esc('2J') + esc('H'));
@@ -383,7 +398,9 @@ if (process.stdin.isTTY) {
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
   process.stdin.on('data', (key) => {
-    if (key === 'q' || key === '') { shutdown(); return; }
+    // '' = Ctrl+C. Le mode raw court-circuite SIGINT, donc sans cette
+    // comparaison explicite seule la touche « q » permettait de quitter.
+    if (key === 'q' || key === '\u0003') { shutdown(); return; }
 
     // r : toggle auto-restart global
     if (key === 'r') { autoRestart = !autoRestart; refreshAll(); return; }
