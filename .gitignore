@@ -48,7 +48,9 @@ logs/
 .env.local
 .env.*.local
 env.json
-env-model.json
+# env-model.json est le MODELE a copier en env.json : il ne contient aucun secret et
+# doit etre livre avec le depot. Il etait ignore par regle tout en restant suivi --
+# la regle n'a jamais eu d'effet, mais elle aurait fait manquer toute mise a jour.
 *.secret
 *.key
 *.pem
@@ -81,10 +83,7 @@ public/soundboard/*
 /data/scheduler.json
 /data/channel_points.json
 
-/data/scheduler.json
 /public/channelpoint/*
-
-/public/banner/*
 
 public/banner/*
 !public/banner/banner.txt
@@ -95,8 +94,14 @@ public/scheduler/*
 public/font/*
 !public/font/font.txt
 
+# Binaires compiles : produits par `node ./compile/build.cjs` depuis les depots freres.
+# Ils etaient suivis, ce qui ajoutait ~26 Mo non compressibles a l'historique a chaque
+# cycle de rebuild (.git avait atteint 154 Mo pour 26 fichiers). Ils se redistribuent
+# par release, pas par commit.
+*.exe
 
-compile/
+# NE PAS ignorer compile/ : `node ./compile/build.cjs` est la procedure de compilation
+# documentee dans le README. La regle `compile/` rendait tout clone incompilable.
 
 
 # Fichiers de build

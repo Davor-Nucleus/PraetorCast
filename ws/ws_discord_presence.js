@@ -47,7 +47,11 @@ function buildPayload() {
   });
 }
 
-const wss = new WebSocketServer({ port: PORT });
+// `host` explicite : sans lui, `ws` écoute sur toutes les interfaces et expose au
+// réseau local les pseudos, avatars et état « en train de parler » de tout le salon
+// vocal — des données personnelles de tiers qui n'ont pas consenti à cette diffusion.
+// Les serveurs Rust de la pile se limitent déjà à 127.0.0.1.
+const wss = new WebSocketServer({ port: PORT, host: '127.0.0.1' });
 
 wss.on('connection', ws => {
   ws.send(buildPayload());
