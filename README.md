@@ -20,6 +20,8 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Overlays OBS clés en main** — horloge, bannière tournante, planning hebdomadaire, musique en cours, emote corner, infos followers.
 - **Chat multi-plateformes** — Twitch (horizontal / vertical) et YouTube, affichés côte à côte dans OBS.
 - **Channel Points Twitch** — alertes personnalisées avec image et son propres à chaque récompense.
+- **Barres d'objectif** — plusieurs barres empilables (followers, abonnés, compteur libre),
+  éditables depuis `/goal-config`.
 - **Présence Discord** — affichage en direct des membres connectés en vocal.
 - **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV/AAC/MP4, playlists par dossier, normalisation EBU R128.
 - **Soundboard (PhonosCore)** — effets sonores qui mettent automatiquement la musique en pause le temps de jouer.
@@ -172,8 +174,18 @@ Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`.
 
 Remplacez `TON_CLIENT_ID` dans cette URL :
 ```text
-https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread%20channel%3Aread%3Aredemptions
+https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread%20channel%3Aread%3Aredemptions%20channel%3Aread%3Asubscriptions
 ```
+
+Scopes demandés :
+
+| Scope | Utilisé par |
+|---|---|
+| `user:read:email`, `user:read:follows` | Identification du compte |
+| `moderator:read:followers` | Compteur de followers, alertes de follow |
+| `chat:read` | Overlays de chat |
+| `channel:read:redemptions` | Points de chaîne |
+| `channel:read:subscriptions` | Barre d'objectif en mode « abonnés » |
 
 Après autorisation, récupérez le `access_token` dans l'URL.
 
@@ -283,6 +295,8 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Planning des streams** | `http://127.0.0.1:3000/scheduler` | `1920x1080` |
 | **Infos Followers** | `http://127.0.0.1:3000/followers-info` | Selon vos scènes |
 | **Présence Discord** | `http://127.0.0.1:3000/discord-presence`| Selon vos scènes |
+| **Points de chaîne** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
+| **Barres d'objectif** | `http://127.0.0.1:3000/goal` | ~`800x160` par barre |
 
 > [!TIP]
 > **Options OBS recommandées :** Cochez l'option _"Actualiser le navigateur quand la scène devient active"_ et désactivez _"Contrôles"_ pour éviter les interactions parasites.
@@ -311,6 +325,59 @@ Les données des overlays sont sauvegardées en format JSON dans le dossier `dat
   "transitionDuration": 1000
 }
 ```
+</details>
+
+<details>
+<summary><b>Format: goal.json</b></summary>
+
+Plusieurs barres peuvent coexister : elles s'empilent dans l'ordre du tableau.
+
+```json
+{
+  "goals": [
+    {
+      "source": "followers",
+      "title": "Objectif followers",
+      "target": 200,
+      "manualCurrent": 0,
+      "baseline": 0,
+      "accentColor": "#9146FF",
+      "showNumbers": true,
+      "showPercent": true,
+      "visible": true
+    },
+    {
+      "source": "manual",
+      "title": "Objectif dons",
+      "target": 250,
+      "manualCurrent": 80,
+      "baseline": 0,
+      "accentColor": "#ef4444",
+      "showNumbers": true,
+      "showPercent": true,
+      "visible": true
+    }
+  ]
+}
+```
+
+| Champ | Rôle |
+|---|---|
+| `source` | `followers` (relevé par EventSub), `subs` (Helix, voir ci-dessous) ou `manual` |
+| `title` | Libellé affiché à gauche de la barre |
+| `target` | Cible. À 0, la barre est considérée comme atteinte |
+| `manualCurrent` | Valeur courante — **uniquement** si `source` vaut `manual` |
+| `baseline` | Retranchée du total mesuré : mettez votre total actuel pour un objectif « +50 ce stream » plutôt qu'un total absolu |
+| `accentColor` | Couleur de remplissage de la barre |
+| `showNumbers`, `showPercent` | Masquent les chiffres ou le pourcentage |
+| `visible` | À `false`, la barre disparaît de l'overlay sans être supprimée |
+
+> [!TIP]
+> Deux barres peuvent partager la même source — par exemple un total absolu
+> (`baseline: 0`) et une progression du jour (`baseline` = votre total actuel).
+> La valeur n'est relevée qu'une fois par cycle, quel que soit le nombre de barres
+> qui l'utilisent.
+
 </details>
 
 <details>
