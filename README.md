@@ -28,6 +28,9 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Pilotage OBS** — contrôle du filtre Limiter via obs-websocket v5, sans quitter la page de configuration.
 - **Routage audio Windows (line)** — capture loopback WASAPI et redirection vers un autre périphérique.
 - **Pages de configuration web** — bannière, planning, musique / soundboard et channel points, éditables depuis le navigateur.
+- **Paramètres dans le navigateur (`/settings`)** — `env.json` éditable sans quitter l'interface : ports, réglages OBS, raccourcis, secrets masqués.
+- **Jeton Twitch en un clic** — un bouton remplace l'URL d'autorisation à construire à la main et le copier-coller depuis la barre d'adresse.
+- **Thème global des overlays** — accent, police, rayons et ombres pilotés depuis `/settings`, appliqués en direct aux sources OBS.
 - **Temps réel** — WebSockets pour rafraîchir les overlays sans recharger les sources OBS.
 - **Lancement et compilation automatisés** — manager de démarrage (`start.bat`) et script de build unifié (`build.cjs`).
 
@@ -131,6 +134,9 @@ node ./compile/build.cjs --help
 
 ## ⚙️ Configuration
 
+> [!TIP]
+> La page **`/settings`** édite `env.json` depuis le navigateur : ports, identifiants Twitch, réglages OBS, raccourcis soundboard et thème des overlays. Les secrets y sont masqués, les ports validés, et chaque champ indique le service à redémarrer le cas échéant. Le fichier reste éditable à la main pour une première installation.
+
 ### 1. Fichier `env.json`
 
 Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`. Ce fichier contient les ports, clés d'API et paramètres de vos scènes.
@@ -147,7 +153,8 @@ Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`.
     "PORT_WS_DISCORD_PRESENCE": 3004,
     "DISCORD_CLIENT_ID": "votre_id",
     "TWITCH_CLIENT_ID": "votre_id",
-    "TWITCH_OAUTH_TOKEN": "votre_token",
+    "TWITCH_OAUTH_TOKEN": "",
+    "TWITCH_TOKEN_EXPIRES_AT": 0,
     "YOUTUBE_CHANNEL_ID": "votre_id",
     "VOLUME": 0.5,
     "OBS_WS_HOST": "localhost",
@@ -163,19 +170,34 @@ Créez le fichier `env.json` à la racine à partir du modèle `env-model.json`.
 
 ### 2. Configuration des tokens (Twitch)
 
-#### 1. Obtenir le Client ID
+Il n'y a que **deux valeurs à saisir** : le nom de chaîne et le Client ID. Le
+`TWITCH_OAUTH_TOKEN` est généré par un bouton — plus d'URL à construire ni de jeton
+à recopier depuis la barre d'adresse.
+
+#### 1. Créer l'application Twitch
 
 1. Allez sur https://dev.twitch.tv/console/apps
-2. Connectez-vous avec votre compte Twitch
-3. Créez une application
-4. Récupérez le Client ID
+2. Connectez-vous avec votre compte Twitch et créez une application
+3. Dans **URL de redirection OAuth**, ajoutez **exactement** :
+   ```text
+   http://localhost:3000/auth/callback
+   ```
+4. Récupérez le **Client ID**
 
-#### 2. Obtenir le Token OAuth
 
-Remplacez `TON_CLIENT_ID` dans cette URL :
-```text
-https://id.twitch.tv/oauth2/authorize?client_id=TON_CLIENT_ID&redirect_uri=http://localhost&response_type=token&scope=user%3Aread%3Aemail%20user%3Aread%3Afollows%20moderator%3Aread%3Afollowers%20chat%3Aread%20channel%3Aread%3Aredemptions%20channel%3Aread%3Asubscriptions
-```
+#### 2. Générer le jeton en un clic
+
+1. Ouvrez `http://localhost:3000/settings`
+2. Renseignez **Nom de la chaîne** et **Client ID**, puis **Enregistrer**
+3. Cliquez sur **Connecter Twitch** et acceptez l'autorisation
+
+Twitch renvoie sur PraetorCast, qui enregistre `TWITCH_OAUTH_TOKEN` et son échéance dans
+`env.json`, puis reconnecte la session EventSub — sans redémarrer le serveur. Le panneau
+affiche le compte connecté, le temps restant et les droits éventuellement manquants.
+
+**Pour refaire le jeton**, il suffit de **recliquer sur « Connecter Twitch »** : l'écran de
+consentement est réaffiché et le jeton est remplacé. Un jeton Twitch vit une soixantaine de
+jours ; `/settings` passe l'échéance en orange la dernière semaine.
 
 Scopes demandés :
 
@@ -187,9 +209,10 @@ Scopes demandés :
 | `channel:read:redemptions` | Points de chaîne |
 | `channel:read:subscriptions` | Barre d'objectif en mode « abonnés » |
 
-Après autorisation, récupérez le `access_token` dans l'URL.
+#### 3. Vérifier la configuration
 
-#### 3. Tester la configuration
+Le bouton **Vérifier le jeton** de `/settings` interroge `id.twitch.tv/oauth2/validate` et
+affiche le compte, l'expiration et les scopes manquants. En ligne de commande :
 
 ```bash
 curl -H "Client-ID: TON_CLIENT_ID" -H "Authorization: Bearer TON_OAUTH_TOKEN" https://api.twitch.tv/helix/users
@@ -300,6 +323,23 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 
 > [!TIP]
 > **Options OBS recommandées :** Cochez l'option _"Actualiser le navigateur quand la scène devient active"_ et désactivez _"Contrôles"_ pour éviter les interactions parasites.
+
+### Thème commun
+
+Tous les overlays chargent la même feuille générée, `http://127.0.0.1:3000/theme.css`, et n'utilisent plus que ses variables. La section **Thème des overlays** de `/settings` pilote donc en un seul endroit :
+
+| Variable | Rôle |
+|---|---|
+| `--pc-accent`, `--pc-accent-2` | Couleur principale et second ton des dégradés |
+| `--pc-font`, `--pc-font-scale` | Police (issue de `FRONT_FONT_TITLE`) et échelle globale du texte |
+| `--pc-text`, `--pc-text-muted` | Texte principal et secondaire |
+| `--pc-bg`, `--pc-panel` | Fond des overlays transparents, fond des bulles et pastilles |
+| `--pc-radius`, `--pc-radius-sm`, `--pc-shadow` | Rayons de bordure et ombre portée |
+
+Une modification est poussée aux sources OBS ouvertes par le WebSocket `/api/theme_ws` : **inutile d'actualiser les sources**. Les valeurs sont stockées dans `data/theme.json`.
+
+> [!NOTE]
+> `/clock`, `/music-current`, `/banner` et `/followers-info` gardent volontairement leur fond opaque : ce sont des affichages plein écran, pas des incrustations. `--pc-bg` ne s'applique qu'aux overlays transparents.
 
 ---
 

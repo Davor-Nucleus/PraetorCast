@@ -2,6 +2,7 @@
 
 // Compile les binaires Rust de PraetorCast et les depose a la racine du projet.
 // Les depots sources sont des dossiers *freres* de PraetorCast (voir TARGETS).
+//  purge avant de compiler : '--clean', '-c'
 //
 //   node ./compile/build.cjs             -> les 4 cibles
 //   node ./compile/build.cjs janus line  -> uniquement ces cibles
