@@ -22,6 +22,9 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Channel Points Twitch** — alertes personnalisées avec image et son propres à chaque récompense.
 - **Barres d'objectif** — plusieurs barres empilables (followers, abonnés, compteur libre),
   éditables depuis `/goal-config`.
+- **Objectifs dans la bannière** — depuis `/banner-config`, une carte de la rotation peut
+  afficher un objectif au lieu d'un texte, et des barres peuvent rester fixées sur un bord
+  pendant que les cartes tournent.
 - **Présence Discord** — affichage en direct des membres connectés en vocal.
 - **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV/AAC/MP4, playlists par dossier, normalisation EBU R128.
 - **Soundboard (PhonosCore)** — effets sonores qui mettent automatiquement la musique en pause le temps de jouer.
@@ -315,6 +318,7 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Chat Vertical** | `http://127.0.0.1:3000/chat-vertical` | Colonne latérale |
 | **Chat YouTube** | `http://127.0.0.1:3000/chat-youtube` | Colonne latérale |
 | **Bannières rotatives** | `http://127.0.0.1:3000/banner` | `1920x1080` |
+| **Compte à rebours** | `http://127.0.0.1:3000/timer` | Selon vos scènes |
 | **Planning des streams** | `http://127.0.0.1:3000/scheduler` | `1920x1080` |
 | **Infos Followers** | `http://127.0.0.1:3000/followers-info` | Selon vos scènes |
 | **Présence Discord** | `http://127.0.0.1:3000/discord-presence`| Selon vos scènes |
@@ -355,16 +359,65 @@ Les données des overlays sont sauvegardées en format JSON dans le dossier `dat
   "cards": [
     {
       "id": "uuid",
-      "title": "Titre de la carte",
-      "subtitle": "Sous-titre",
+      "kind": "text",
+      "text": "Bienvenue sur le stream",
       "imagePath": "/public/banner/image.png",
-      "link": "https://..."
+      "transition": "fade",
+      "order": 0,
+      "durationMs": 6000
+    },
+    {
+      "id": "uuid",
+      "kind": "goal",
+      "goalId": "uuid-de-l-objectif",
+      "transition": "zoom",
+      "order": 1,
+      "durationMs": 8000
     }
   ],
-  "rotationInterval": 5000,
-  "transitionDuration": 1000
+  "dock": {
+    "enabled": true,
+    "position": "bottom",
+    "scale": 1
+  }
 }
 ```
+
+| Champ d'une carte | Rôle |
+|---|---|
+| `kind` | `text` (défaut) : texte et/ou image. `goal` : une barre d'objectif |
+| `text`, `imagePath` | Contenu d'une carte `text` |
+| `goalId` | Cible d'une carte `goal`, par son `id` dans `goal.json`. **Absent = tous les objectifs** |
+| `transition` | `fade`, `slide`, `zoom` ou `flip` |
+| `durationMs` | Temps d'affichage avant rotation. Absent = 6 000 ms |
+| `order` | Position dans le cycle, réindexée à l'enregistrement |
+
+Le bloc `dock` décrit les **barres fixes** : des objectifs affichés en permanence sur un
+bord, pendant que les cartes tournent au-dessus. Ce n'est pas un élément de la rotation.
+
+| Champ du dock | Rôle |
+|---|---|
+| `enabled` | À `false` (défaut), aucune barre fixe |
+| `position` | `bottom` (défaut) ou `top`. Les cartes s'arrêtent à la limite des barres |
+| `goalId` | Comme pour une carte : absent = tous les objectifs |
+| `scale` | Ajustement de taille. `1` (défaut) est la taille prévue, qui se calibre seule sur la largeur de la source ; ce réglage ne sert qu'à s'en écarter |
+
+> [!NOTE]
+> Un `banner.json` antérieur reste lisible tel quel : une carte sans `kind` reste une
+> carte texte, et le bloc `dock` absent vaut « désactivé ». Rien ne change tant que
+> vous n'ajoutez pas de carte objectif dans `/banner-config`.
+
+> [!TIP]
+> Dans la bannière, les barres reprennent l'habillage des cartes texte : titre et
+> chiffres au **dégradé animé** du thème, tailles proportionnelles à la source, rayons
+> de `--pc-radius`. Le remplissage garde en revanche l'`accentColor` de chaque objectif,
+> pour que deux barres restent distinguables. L'overlay `/goal`, lui, conserve son
+> aspect d'incrustation.
+
+> [!TIP]
+> Une carte `goal` dont la cible a été supprimée depuis `/goal-config` est simplement
+> ignorée dans la rotation, plutôt que d'imposer une carte vide à chaque tour.
+
 </details>
 
 <details>
@@ -410,13 +463,18 @@ Plusieurs barres peuvent coexister : elles s'empilent dans l'ordre du tableau.
 | `baseline` | Retranchée du total mesuré : mettez votre total actuel pour un objectif « +50 ce stream » plutôt qu'un total absolu |
 | `accentColor` | Couleur de remplissage de la barre |
 | `showNumbers`, `showPercent` | Masquent les chiffres ou le pourcentage |
-| `visible` | À `false`, la barre disparaît de l'overlay sans être supprimée |
+| `visible` | À `false`, la barre disparaît de l'overlay `/goal` sans être supprimée |
 
 > [!TIP]
 > Deux barres peuvent partager la même source — par exemple un total absolu
 > (`baseline: 0`) et une progression du jour (`baseline` = votre total actuel).
 > La valeur n'est relevée qu'une fois par cycle, quel que soit le nombre de barres
 > qui l'utilisent.
+
+> [!NOTE]
+> Ce fichier ne décrit **que** les objectifs. Leur présence dans la bannière se
+> règle dans `/banner-config` (cf. `banner.json`) : `/goal-config` définit les
+> objectifs, `/banner-config` décide de ce que la bannière affiche.
 
 </details>
 

@@ -95,11 +95,6 @@ public/scheduler/*
 public/font/*
 !public/font/font.txt
 
-# Binaires compiles : produits par `node ./compile/build.cjs` depuis les depots freres.
-# Ils etaient suivis, ce qui ajoutait ~26 Mo non compressibles a l'historique a chaque
-# cycle de rebuild (.git avait atteint 154 Mo pour 26 fichiers). Ils se redistribuent
-# par release, pas par commit.
-*.exe
 
 # NE PAS ignorer compile/ : `node ./compile/build.cjs` est la procedure de compilation
 # documentee dans le README. La regle `compile/` rendait tout clone incompilable.
