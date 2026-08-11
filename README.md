@@ -19,7 +19,13 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 
 - **Overlays OBS clés en main** — horloge, bannière tournante, planning hebdomadaire, musique en cours, emote corner, infos followers.
 - **Chat multi-plateformes** — Twitch (horizontal / vertical) et YouTube, affichés côte à côte dans OBS.
-- **Channel Points Twitch** — alertes personnalisées avec image et son propres à chaque récompense.
+- **Modération respectée dans le chat** — un message supprimé, un timeout ou un bannissement
+  retire aussitôt les messages concernés de l'overlay, au lieu de les laisser à l'écran.
+- **Alertes d'événements Twitch** — points de chaîne, abonnements, réabonnements, abonnements
+  offerts, bits et raids, avec image, son et phrase propres. Paliers par montant : un cheer de
+  5 000 bits peut déclencher une autre alerte qu'un cheer de 50.
+- **Timer subathon** — les abonnements, bits et raids rallongent automatiquement le compte à
+  rebours, selon un barème réglable depuis `/timer-config`.
 - **Barres d'objectif** — plusieurs barres empilables (followers, abonnés, compteur libre),
   éditables depuis `/goal-config`.
 - **Objectifs dans la bannière** — depuis `/banner-config`, une carte de la rotation peut
@@ -210,7 +216,15 @@ Scopes demandés :
 | `moderator:read:followers` | Compteur de followers, alertes de follow |
 | `chat:read` | Overlays de chat |
 | `channel:read:redemptions` | Points de chaîne |
-| `channel:read:subscriptions` | Barre d'objectif en mode « abonnés » |
+| `channel:read:subscriptions` | Barre d'objectif « abonnés », alertes d'abonnement |
+| `bits:read` | Alertes de bits (cheer) |
+
+> [!NOTE]
+> Les raids et les événements de début / fin de direct n'exigent aucun droit. Un jeton créé
+> avant l'arrivée des alertes d'événements n'a pas `bits:read` : `/settings` affiche alors
+> « Droits manquants : bits:read » et **seules les alertes de bits** sont inactives — les
+> autres souscriptions continuent de fonctionner. Un clic sur **Connecter Twitch** règle le
+> problème sans redémarrage.
 
 #### 3. Vérifier la configuration
 
@@ -322,8 +336,30 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Planning des streams** | `http://127.0.0.1:3000/scheduler` | `1920x1080` |
 | **Infos Followers** | `http://127.0.0.1:3000/followers-info` | Selon vos scènes |
 | **Présence Discord** | `http://127.0.0.1:3000/discord-presence`| Selon vos scènes |
-| **Points de chaîne** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
+| **Alertes (points de chaîne, subs, bits, raids)** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
 | **Barres d'objectif** | `http://127.0.0.1:3000/goal` | ~`800x160` par barre |
+
+### Piloter les overlays à distance (Stream Deck, raccourci, favori)
+
+Ces routes acceptent **GET et POST**, avec leurs paramètres dans l'URL : un bouton de Stream
+Deck ne sait faire qu'un GET.
+
+| Route | Effet |
+|---|---|
+| `/api/timer/start`, `/pause`, `/toggle`, `/reset` | Contrôle du compte à rebours |
+| `/api/timer/adjust?deltaMs=60000` | Ajoute (ou retire, en négatif) du temps |
+| `/api/goal/adjust?id=<uuid>&delta=5` | Ajoute au compteur d'un objectif `manual` |
+| `/api/goal/set?id=<uuid>&value=150` | Fixe le compteur d'un objectif `manual` |
+
+> [!IMPORTANT]
+> Les deux routes d'objectif écrivent `manualCurrent`, **le champ brut** que `/goal-config`
+> édite — pas la valeur affichée, dont `baseline` est ensuite retranchée. Avec
+> `baseline: 20`, un `set?value=150` fait donc afficher `130`. La réponse renvoie les deux
+> (`manualCurrent` et `current`) pour lever le doute.
+>
+> Un objectif dont la source est `followers` ou `subs` répond **409** : sa valeur vient de
+> Twitch et l'écriture n'aurait aucun effet. Un identifiant inconnu répond **404** avec la
+> liste des objectifs existants, ce qui donne directement l'`id` à câbler.
 
 > [!TIP]
 > **Options OBS recommandées :** Cochez l'option _"Actualiser le navigateur quand la scène devient active"_ et désactivez _"Contrôles"_ pour éviter les interactions parasites.
@@ -475,6 +511,98 @@ Plusieurs barres peuvent coexister : elles s'empilent dans l'ordre du tableau.
 > Ce fichier ne décrit **que** les objectifs. Leur présence dans la bannière se
 > règle dans `/banner-config` (cf. `banner.json`) : `/goal-config` définit les
 > objectifs, `/banner-config` décide de ce que la bannière affiche.
+
+</details>
+
+<details>
+<summary><b>Format: channel_points.json (alertes)</b></summary>
+
+Une liste d'alertes, tous types confondus. Le fichier et la route gardent leur nom
+historique : les alertes d'événements se sont greffées sur le moteur des points de chaîne
+(file d'attente, watchdog audio, transitions) plutôt que d'ouvrir un second overlay.
+
+```json
+[
+  {
+    "kind": "channel_points",
+    "reward_title": "Un cookie ?!",
+    "phrase": "Merci {{user}} pour le {{reward}} !",
+    "imagePath": "/public/channelpoint/cookie.gif",
+    "soundPath": "/public/channelpoint/yum.mp3",
+    "transition": "zoom"
+  },
+  {
+    "kind": "cheer",
+    "minAmount": 1000,
+    "phrase": "ÉNORME ! {{amount}} bits de {{user}} !",
+    "imagePath": "",
+    "soundPath": "/public/channelpoint/fanfare.mp3",
+    "transition": "flip"
+  }
+]
+```
+
+| Champ | Rôle |
+|---|---|
+| `kind` | `channel_points` (défaut), `sub`, `resub`, `gift`, `cheer` ou `raid` |
+| `reward_title` | **`channel_points` uniquement** : titre **exact** de la récompense Twitch |
+| `minAmount` | Palier : l'alerte ne joue qu'à partir de ce montant. `0` attrape tout |
+| `phrase` | Texte affiché, jetons ci-dessous. Vide = image seule |
+| `imagePath`, `soundPath` | Image/GIF et son. La durée d'affichage suit celle du son |
+| `transition` | `fade`, `slide`, `zoom` ou `flip` |
+
+**Ce que porte `minAmount` selon le type** : le palier d'abonnement pour `sub` et `resub`
+(1000 / 2000 / 3000), le nombre d'abonnements offerts pour `gift`, les bits pour `cheer`, les
+spectateurs amenés pour `raid`. Plusieurs lignes du même `kind` forment des paliers : celle
+dont le `minAmount` est le plus élevé **sans dépasser** le montant reçu gagne. Un type sans
+aucune ligne à `0` ignore donc les petits montants, ce qui est le moyen prévu de ne réagir
+qu'aux gros événements.
+
+**Jetons de phrase** : `{{user}}`, `{{amount}}`, `{{tier}}` (1, 2 ou 3), `{{months}}` (mois
+cumulés d'un réabonnement), `{{input}}` (message du cheer ou du resub), `{{reward}}`.
+
+> [!NOTE]
+> Un `channel_points.json` écrit avant l'arrivée des autres types se relit tel quel : `kind`
+> absent vaut `channel_points` et `minAmount` vaut 0. Aucune migration.
+
+> [!TIP]
+> Pour tester l'affichage sans attendre un vrai événement, la console de la source OBS
+> expose `testAlert('Merci {{user}} !', { kind: 'cheer', amount: 500 })`. Le choix de la
+> ligne se faisant côté serveur, ce raccourci n'exerce que le rendu et la file d'attente.
+
+</details>
+
+<details>
+<summary><b>Format: timer.json (bloc subathon)</b></summary>
+
+```json
+{
+  "durationMs": 300000,
+  "remainingMs": 300000,
+  "subathon": {
+    "enabled": true,
+    "msPerSub": 300000,
+    "msPerGiftSub": 300000,
+    "msPer100Bits": 60000,
+    "msPerRaider": 0
+  }
+}
+```
+
+| Champ | Rôle |
+|---|---|
+| `enabled` | À `false` (défaut), aucun événement ne touche au compte à rebours |
+| `msPerSub` | Par abonnement ou réabonnement, **tous paliers confondus** |
+| `msPerGiftSub` | Par abonnement offert : un don de 5 ajoute cinq fois cette valeur |
+| `msPer100Bits` | Proratisé au bit près — 50 bits ajoutent la moitié |
+| `msPerRaider` | Par spectateur amené. À `0` (défaut), les raids n'ajoutent rien |
+
+Réglable depuis `/timer-config`, en secondes. Le temps est ajouté même compteur en pause, et
+un compteur arrivé à zéro repart de zéro plutôt que de rattraper son retard.
+
+> [!NOTE]
+> Le total reste plafonné à **7 jours**. Les points de chaîne sont volontairement absents du
+> barème : ils ont déjà leur coût en points, les compter ici serait un double compte.
 
 </details>
 
