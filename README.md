@@ -24,6 +24,11 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Alertes d'événements Twitch** — points de chaîne, abonnements, réabonnements, abonnements
   offerts, bits et raids, avec image, son et phrase propres. Paliers par montant : un cheer de
   5 000 bits peut déclencher une autre alerte qu'un cheer de 50.
+- **Test des alertes en un clic** — un bouton « Tester dans OBS » par ligne dans
+  `/channel-points-config` : l'alerte joue dans les sources ouvertes sans attendre
+  l'événement Twitch, et les modifications non enregistrées sont prises en compte.
+- **Lien d'affichage copiable** — chaque page de configuration copie l'URL de son overlay,
+  prête à coller dans une source navigateur OBS.
 - **Timer subathon** — les abonnements, bits et raids rallongent automatiquement le compte à
   rebours, selon un barème réglable depuis `/timer-config`.
 - **Barres d'objectif** — plusieurs barres empilables (followers, abonnés, compteur libre),
@@ -339,6 +344,13 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Alertes (points de chaîne, subs, bits, raids)** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
 | **Barres d'objectif** | `http://127.0.0.1:3000/goal` | ~`800x160` par barre |
 
+> [!TIP]
+> Inutile de recopier ce tableau : le bandeau de chaque page de configuration porte un
+> bouton **Copier le lien** qui met l'URL de l'overlay correspondant dans le presse-papiers,
+> avec l'origine de la page en cours (`127.0.0.1` ou `localhost`, selon celle par laquelle
+> vous êtes arrivé). `/text-config` fait exception : chaque section y a sa propre URL
+> (`/text?name=…`), copiable sur sa carte.
+
 ### Piloter les overlays à distance (Stream Deck, raccourci, favori)
 
 Ces routes acceptent **GET et POST**, avec leurs paramètres dans l'URL : un bouton de Stream
@@ -566,9 +578,30 @@ cumulés d'un réabonnement), `{{input}}` (message du cheer ou du resub), `{{rew
 > absent vaut `channel_points` et `minAmount` vaut 0. Aucune migration.
 
 > [!TIP]
-> Pour tester l'affichage sans attendre un vrai événement, la console de la source OBS
-> expose `testAlert('Merci {{user}} !', { kind: 'cheer', amount: 500 })`. Le choix de la
-> ligne se faisant côté serveur, ce raccourci n'exerce que le rendu et la file d'attente.
+> **Tester une alerte sans attendre l'événement.** Chaque ligne de `/channel-points-config`
+> a son bouton **« Tester dans OBS »** : l'alerte part vers toutes les sources
+> `/channel-points` ouvertes avec l'image, le son, la transition et la phrase de cette
+> ligne — **y compris les modifications pas encore enregistrées**, ce qui permet de régler
+> une phrase ou un son en boucle courte.
+>
+> Le serveur fabrique un événement représentatif : `TestUser` pour `{{user}}`, le palier de
+> la ligne pour `{{amount}}` (à défaut 100 bits, 10 raiders, 5 dons, ou le tier 1 pour un
+> abonnement), 12 mois pour `{{months}}`. Le message envoyé est en tout point celui d'une
+> vraie alerte : ce sont bien le rendu, la file d'attente et le watchdog audio qui jouent.
+>
+> Deux réserves. Le choix de la ligne par palier n'est **pas** exercé, le bouton désignant
+> déjà la ligne à jouer — c'est `models::channel_point::select` qui en répond, avec ses
+> tests. Et un test n'ajoute rien au compte à rebours du subathon, même sur une ligne de
+> bits : il passe par un canal séparé, prévu pour ça.
+>
+> Sous le bouton, la page indique combien de sources ont reçu l'alerte. **« Aucune source
+> /channel-points ouverte »** explique un test resté sans effet : il faut que l'overlay soit
+> ouvert dans OBS (ou dans un onglet) pour voir quoi que ce soit.
+
+> [!NOTE]
+> La console de la source OBS expose toujours
+> `testAlert('Merci {{user}} !', { kind: 'cheer', amount: 500 })`, qui court-circuite le
+> serveur pour n'exercer que le rendu — utile pour mettre au point l'overlay lui-même.
 
 </details>
 
