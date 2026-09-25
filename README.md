@@ -37,7 +37,9 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
   afficher un objectif au lieu d'un texte, et des barres peuvent rester fixées sur un bord
   pendant que les cartes tournent.
 - **Présence Discord** — affichage en direct des membres connectés en vocal.
-- **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV/AAC/MP4, playlists par dossier, normalisation EBU R128.
+- **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV, playlists par dossier, normalisation EBU R128.
+- **Barre de progression** — sur l'overlay `/music-current`, avec temps écoulé et durée ; s'active
+  depuis `/music-config` (bouton « Barre de progression »), sans rafraîchir la source OBS.
 - **Soundboard (PhonosCore)** — effets sonores qui mettent automatiquement la musique en pause le temps de jouer.
 - **Pilotage OBS** — contrôle du filtre Limiter via obs-websocket v5, sans quitter la page de configuration.
 - **Routage audio Windows (line)** — capture loopback WASAPI et redirection vers un autre périphérique.
