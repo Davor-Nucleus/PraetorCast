@@ -366,7 +366,7 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Bannières rotatives** | `http://127.0.0.1:3000/banner` | `1920x1080` |
 | **Compte à rebours** | `http://127.0.0.1:3000/timer` | Selon vos scènes |
 | **Planning des streams** | `http://127.0.0.1:3000/scheduler` | `1920x1080` |
-| **Infos Followers** | `http://127.0.0.1:3000/followers-info` | Selon vos scènes |
+| **Tableau de bord (dock)** | `http://127.0.0.1:3000/followers-info` | En **dock** OBS, 220 à 360 px de large (voir ci-dessous) |
 | **Présence Discord** | `http://127.0.0.1:3000/discord-presence`| Selon vos scènes |
 | **Alertes (points de chaîne, subs, bits, raids)** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
 | **Barres d'objectif** | `http://127.0.0.1:3000/goal` | ~`800x160` par barre |
@@ -379,6 +379,29 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 > avec l'origine de la page en cours (`127.0.0.1` ou `localhost`, selon celle par laquelle
 > vous êtes arrivé). `/text-config` fait exception : chaque section y a sa propre URL
 > (`/text?name=…`), copiable sur sa carte ; `/effects-config` aussi, avec un lien par effet.
+
+### Docks OBS
+
+`/music-config` et `/followers-info` sont pensées pour un **dock** plutôt qu'une source :
+**Docks → Docks de navigateur personnalisés**, puis l'URL. Elles restent lisibles dès
+220-240 px de large.
+
+`/followers-info` est un tableau de bord compact :
+
+| Bloc | Contenu |
+|---|---|
+| Bandeau | `LIVE 1:23:45` ou `Hors ligne`, spectateurs, catégorie et titre, connexion aux événements Twitch. Un avertissement cliquable apparaît si le jeton expire sous 7 jours, s'il est invalide ou s'il lui manque des droits |
+| Followers | Total, gain du live, dernier follower avec son ancienneté (« 4 min ») |
+| Ce live | Follows, subs (Prime et réabonnements compris), subs offerts, bits, raids et spectateurs amenés — depuis le début du live, sinon sur les 24 dernières heures |
+| Objectifs · timer | Mini-barres des objectifs visibles de `/goal-config`, temps restant du compte à rebours ou du subathon. Masqué s'il n'y a rien à suivre |
+| Activité | Les 8 derniers événements, avec leur ancienneté |
+| Musique | Titre en cours, ⏸ en pause |
+
+Chaque section se replie d'un clic sur son titre ; le choix est mémorisé. L'état du live
+vient de Twitch (`/api/twitch/stream`, relu toutes les 30 s) : il est juste même après un
+redémarrage de PraetorCast en plein live. Les stats se calculent à partir du journal
+`data/events.json` (500 derniers événements) : un événement survenu pendant que
+PraetorCast était arrêté n'y figure pas.
 
 ### Piloter les overlays à distance (Stream Deck, raccourci, favori)
 
@@ -420,7 +443,7 @@ Tous les overlays chargent la même feuille générée, `http://127.0.0.1:3000/t
 Une modification est poussée aux sources OBS ouvertes par le WebSocket `/api/theme_ws` : **inutile d'actualiser les sources**. Les valeurs sont stockées dans `data/theme.json`.
 
 > [!NOTE]
-> `/clock`, `/music-current`, `/banner` et `/followers-info` gardent volontairement leur fond opaque : ce sont des affichages plein écran, pas des incrustations. `--pc-bg` ne s'applique qu'aux overlays transparents.
+> `/clock`, `/music-current` et `/banner` gardent volontairement leur fond opaque : ce sont des affichages plein écran, pas des incrustations. Les docks (`/music-config`, `/followers-info`) ont leur propre palette sombre. `--pc-bg` ne s'applique qu'aux overlays transparents.
 
 ---
 
@@ -680,9 +703,10 @@ JanusCore (`/api/visualizer_ws`), avant le volume : même à zéro, les barres b
 <details>
 <summary><b>Format: events.json (journal des événements)</b></summary>
 
-Écrit par le serveur, jamais à éditer : les 20 derniers follows, abonnements, dons, bits,
+Écrit par le serveur, jamais à éditer : les 500 derniers follows, abonnements, dons, bits,
 raids et récompenses, du plus récent au plus ancien. C'est lui qui permet à la carte
-« Dernier événement » de la bannière de réafficher le bon pseudo après un redémarrage.
+« Dernier événement » de la bannière de réafficher le bon pseudo après un redémarrage, et
+au dock `/followers-info` de calculer les stats du live.
 
 ```json
 [
