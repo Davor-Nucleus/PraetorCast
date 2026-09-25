@@ -83,6 +83,7 @@ public/soundboard/*
 /data/scheduler.json
 /data/channel_points.json
 /data/goal.json
+/data/timer.json
 
 /public/channelpoint/*
 

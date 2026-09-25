@@ -135,13 +135,24 @@ Les dépôts sources (`praetorcast-core/`, `janus core/`, `line/`) sont des doss
 node ./compile/build.cjs             # les 4 cibles (incrémental)
 node ./compile/build.cjs janus line  # cibles au choix : core | janus | phonos | line
 node ./compile/build.cjs --clean     # vide les target/ puis recompile tout à neuf
+node ./compile/build.cjs --sync      # synchronise seulement public/ et data/, sans compiler
 node ./compile/build.cjs --help
 ```
 
 `--clean` lance un `cargo clean` complet sur les dépôts concernés (dépendances comprises) avant de compiler : utile pour repartir d'une base saine ou libérer de l'espace disque, mais compter plusieurs minutes de recompilation.
 
+Après la cible `core`, le script synchronise aussi les ressources que `praetorcast-core.exe` lit sur le disque (les templates, eux, sont compilés dans l'exe) :
+
+| Source (`praetorcast-core/`) | Traitement |
+|---|---|
+| `public/js` | Aligné : un fichier dont le contenu diffère est remplacé |
+| `public/banner`, `scheduler`, `channelpoint`, `font`, favicons | Ajoutés s'ils manquent, jamais écrasés |
+| `data/*.json` | Créés s'ils manquent, jamais écrasés : ce sont vos réglages en cours |
+
+Rien n'est jamais supprimé, et `env.json` n'est jamais touché.
+
 > [!NOTE]
-> Le script refuse de démarrer si un `.exe` est verrouillé par un service en cours : quittez PraetorCast (`[q]` dans le manager) avant de recompiler. Il ne touche jamais à `public/`, `data/` ni `env.json`.
+> Le script refuse de démarrer si un `.exe` est verrouillé par un service en cours : quittez PraetorCast (`[q]` dans le manager) avant de recompiler.
 > Si vos dépôts ne sont pas dans le dossier parent, définissez `PRAETORCAST_SRC`.
 
 ---

@@ -1,3 +1,3 @@
 @echo off
-cd ..
+cd /d "%~dp0.."
 node ./start/manager.cjs
