@@ -84,6 +84,9 @@ public/soundboard/*
 /data/channel_points.json
 /data/goal.json
 /data/timer.json
+/data/effects.json
+# Journal des derniers follows, subs, raids : pseudos de viewers, rien à versionner.
+/data/events.json
 
 /public/channelpoint/*
 

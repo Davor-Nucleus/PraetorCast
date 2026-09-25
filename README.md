@@ -24,9 +24,16 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Alertes d'événements Twitch** — points de chaîne, abonnements, réabonnements, abonnements
   offerts, bits et raids, avec image, son et phrase propres. Paliers par montant : un cheer de
   5 000 bits peut déclencher une autre alerte qu'un cheer de 50.
+- **Phrases d'alerte animées** — chaque ligne de `/channel-points-config` choisit une animation
+  d'entrée (tampon, machine à écrire, rebond…) et un effet continu (néon, vague, arc-en-ciel…),
+  les mêmes que les textes de `/text-config`. Sans réglage, le dégradé animé d'origine.
 - **Test des alertes en un clic** — un bouton « Tester dans OBS » par ligne dans
   `/channel-points-config` : l'alerte joue dans les sources ouvertes sans attendre
   l'événement Twitch, et les modifications non enregistrées sont prises en compte.
+- **Effets (`/effects-config`)** — pluie d'emotes de la chaîne sur un raid, un gros cheer, un don
+  de subs ou un objectif atteint ; cadre caméra aux couleurs du thème qui s'illumine à chaque
+  événement ; visualiseur audio qui suit la musique de JanusCore. Réglages appliqués en direct,
+  boutons « Tester dans OBS ».
 - **Lien d'affichage copiable** — chaque page de configuration copie l'URL de son overlay,
   prête à coller dans une source navigateur OBS.
 - **Timer subathon** — les abonnements, bits et raids rallongent automatiquement le compte à
@@ -36,10 +43,16 @@ PraetorCast est un outil complet pour les streamers, permettant de faciliter la 
 - **Objectifs dans la bannière** — depuis `/banner-config`, une carte de la rotation peut
   afficher un objectif au lieu d'un texte, et des barres peuvent rester fixées sur un bord
   pendant que les cartes tournent.
+- **Dernier événement dans la bannière** — une carte « Dernier follower », « Dernier abonné »,
+  « Derniers bits », « Dernier raid »… ou tous types confondus, mise à jour en direct et
+  retrouvée après un redémarrage.
 - **Présence Discord** — affichage en direct des membres connectés en vocal.
 - **Lecteur de musique (JanusCore)** — MP3/FLAC/WAV, playlists par dossier, normalisation EBU R128.
 - **Barre de progression** — sur l'overlay `/music-current`, avec temps écoulé et durée ; s'active
   depuis `/music-config` (bouton « Barre de progression »), sans rafraîchir la source OBS.
+- **Musique en cours responsive** — `/music-current` s'adapte à la forme de la source : en ligne
+  en paysage, compacte dans un bandeau bas, verticale avec grande pochette dans une source plus
+  haute que large. `?spin` fait tourner la pochette comme un disque.
 - **Soundboard (PhonosCore)** — effets sonores qui mettent automatiquement la musique en pause le temps de jouer.
 - **Pilotage OBS** — contrôle du filtre Limiter via obs-websocket v5, sans quitter la page de configuration.
 - **Routage audio Windows (line)** — capture loopback WASAPI et redirection vers un autre périphérique.
@@ -345,7 +358,8 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 |---|---|---|
 | **Page d'accueil / Dashboard** | `http://127.0.0.1:3000/` | Libre |
 | **Horloge** | `http://127.0.0.1:3000/clock` | Selon vos scènes |
-| **Musique actuelle** | `http://127.0.0.1:3000/music-current` | Selon vos scènes |
+| **Musique actuelle** | `http://127.0.0.1:3000/music-current` | Paysage (ex. `900x120`), bandeau bas, ou portrait (ex. `400x600`) : la mise en page suit la forme. `?spin` : pochette qui tourne |
+| **Visualiseur audio** | `http://127.0.0.1:3000/music-visualizer` | ex. `1200x200` |
 | **Chat Horizontal** | `http://127.0.0.1:3000/chat-horizontal` | Pleine largeur (ex: 1920px) |
 | **Chat Vertical** | `http://127.0.0.1:3000/chat-vertical` | Colonne latérale |
 | **Chat YouTube** | `http://127.0.0.1:3000/chat-youtube` | Colonne latérale |
@@ -356,13 +370,15 @@ Dans OBS Studio, ajoutez une **Source Navigateur** pour chaque overlay souhaité
 | **Présence Discord** | `http://127.0.0.1:3000/discord-presence`| Selon vos scènes |
 | **Alertes (points de chaîne, subs, bits, raids)** | `http://127.0.0.1:3000/channel-points` | Selon vos scènes |
 | **Barres d'objectif** | `http://127.0.0.1:3000/goal` | ~`800x160` par barre |
+| **Pluie d'emotes** | `http://127.0.0.1:3000/emote-rain` | `1920x1080`, au-dessus des autres sources |
+| **Cadre caméra** | `http://127.0.0.1:3000/camera-frame` | La taille de la webcam, posé par-dessus |
 
 > [!TIP]
 > Inutile de recopier ce tableau : le bandeau de chaque page de configuration porte un
 > bouton **Copier le lien** qui met l'URL de l'overlay correspondant dans le presse-papiers,
 > avec l'origine de la page en cours (`127.0.0.1` ou `localhost`, selon celle par laquelle
 > vous êtes arrivé). `/text-config` fait exception : chaque section y a sa propre URL
-> (`/text?name=…`), copiable sur sa carte.
+> (`/text?name=…`), copiable sur sa carte ; `/effects-config` aussi, avec un lien par effet.
 
 ### Piloter les overlays à distance (Stream Deck, raccourci, favori)
 
@@ -446,9 +462,10 @@ Les données des overlays sont sauvegardées en format JSON dans le dossier `dat
 
 | Champ d'une carte | Rôle |
 |---|---|
-| `kind` | `text` (défaut) : texte et/ou image. `goal` : une barre d'objectif |
+| `kind` | `text` (défaut) : texte et/ou image. `goal` : une barre d'objectif. `event` : le dernier événement de la chaîne |
 | `text`, `imagePath` | Contenu d'une carte `text` |
 | `goalId` | Cible d'une carte `goal`, par son `id` dans `goal.json`. **Absent = tous les objectifs** |
+| `eventKind` | Type montré par une carte `event` : `follow`, `sub` (Prime et réabonnements compris), `gift`, `cheer`, `raid` ou `channel_points`. **Absent = tous, points de chaîne exceptés**. La carte est sautée tant qu'aucun événement de ce type n'est arrivé |
 | `transition` | `fade`, `slide`, `zoom` ou `flip` |
 | `durationMs` | Temps d'affichage avant rotation. Absent = 6 000 ms |
 | `order` | Position dans le cycle, réindexée à l'enregistrement |
@@ -575,6 +592,8 @@ historique : les alertes d'événements se sont greffées sur le moteur des poin
 | `phrase` | Texte affiché, jetons ci-dessous. Vide = image seule |
 | `imagePath`, `soundPath` | Image/GIF et son. La durée d'affichage suit celle du son |
 | `transition` | `fade`, `slide`, `zoom` ou `flip` |
+| `textAnimation` | Entrée de la phrase, parmi celles de `/text-config` (`stamp`, `typewriter`, `bounce`…). Absent = aucune |
+| `textEffect` | Effet continu de la phrase (`neon`, `wave`, `rainbow`…), démarré à la fin de l'entrée. Absent = `gradient`, le rendu d'origine |
 
 **Ce que porte `minAmount` selon le type** : le palier d'abonnement pour `sub` et `resub`
 (1000 / 2000 / 3000), le nombre d'abonnements offerts pour `gift`, les bits pour `cheer`, les
@@ -615,6 +634,62 @@ cumulés d'un réabonnement), `{{input}}` (message du cheer ou du resub), `{{rew
 > La console de la source OBS expose toujours
 > `testAlert('Merci {{user}} !', { kind: 'cheer', amount: 500 })`, qui court-circuite le
 > serveur pour n'exercer que le rendu — utile pour mettre au point l'overlay lui-même.
+
+> [!NOTE]
+> Un test d'alerte fait aussi réagir le cadre caméra et la pluie d'emotes (selon leurs
+> seuils), pour tout régler d'un coup. Il n'apparaît jamais comme « dernier événement »
+> dans la bannière.
+
+</details>
+
+<details>
+<summary><b>Format: effects.json (pluie d'emotes, cadre caméra, visualiseur)</b></summary>
+
+Édité par `/effects-config`, appliqué en direct aux sources ouvertes. Chaque champ a un
+défaut : un fichier absent ou partiel se lit tel quel.
+
+```json
+{
+  "rain": {
+    "onRaid": true, "raidMin": 0,
+    "onCheer": true, "cheerMin": 500,
+    "onGift": true, "giftMin": 5,
+    "onSub": false, "onGoal": true,
+    "count": 60, "durationMs": 5000, "size": 1.0
+  },
+  "frame": {
+    "thickness": 6, "animated": true, "glow": true,
+    "pulse": true, "pulseOnFollow": true, "intensity": 1.0
+  },
+  "visualizer": { "bars": 48, "style": "bars", "sensitivity": 1.0 }
+}
+```
+
+| Bloc | Champs |
+|---|---|
+| `rain` | Déclencheurs (`on*`) et leurs seuils (`*Min`) ; `onGoal` = un objectif de `/goal-config` qui atteint sa cible. `count` 5–300 emotes, `durationMs` 1 000–20 000, `size` 0,3–3 |
+| `frame` | `thickness` 1–40 px ; `animated` dégradé tournant ; `glow` halo permanent ; `pulse` éclat sur les événements, proportionné au montant ; `pulseOnFollow` y compris les follows ; `intensity` 0,2–3 |
+| `visualizer` | `bars` 8–128 ; `style` `bars`, `mirror` ou `wave` ; `sensitivity` 0,3–3 |
+
+Les emotes viennent de ta chaîne (`/api/twitch/emotes`, gardées une heure) ; une chaîne sans
+emote retombe sur les emotes globales de Twitch. Le visualiseur lit le spectre calculé par
+JanusCore (`/api/visualizer_ws`), avant le volume : même à zéro, les barres bougent.
+
+</details>
+
+<details>
+<summary><b>Format: events.json (journal des événements)</b></summary>
+
+Écrit par le serveur, jamais à éditer : les 20 derniers follows, abonnements, dons, bits,
+raids et récompenses, du plus récent au plus ancien. C'est lui qui permet à la carte
+« Dernier événement » de la bannière de réafficher le bon pseudo après un redémarrage.
+
+```json
+[
+  { "kind": "raid", "userName": "Raider", "amount": 42, "months": 0, "atMs": 1790000000000 },
+  { "kind": "follow", "userName": "Ronni", "amount": 0, "months": 0, "atMs": 1789999000000 }
+]
+```
 
 </details>
 
